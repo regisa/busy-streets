@@ -1,0 +1,48 @@
+{
+  "name": "busy-streets",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.34.5",
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": ">=10 <11"
+  },
+  "scripts": {
+    "check": "pnpm typecheck && pnpm test",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "traffic:audit": "tsx scripts/traffic/cli.ts audit",
+    "traffic:inspect": "tsx scripts/traffic/cli.ts inspect",
+    "traffic:register": "tsx scripts/traffic/cli.ts register",
+    "traffic:verify": "tsx scripts/traffic/cli.ts verify",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@turf/along": "7.4.0",
+    "@turf/bearing": "7.4.0",
+    "@turf/boolean-intersects": "7.4.0",
+    "@turf/boolean-point-in-polygon": "7.4.0",
+    "@turf/buffer": "7.4.0",
+    "@turf/distance": "7.4.0",
+    "@turf/helpers": "7.4.0",
+    "@turf/length": "7.4.0",
+    "@turf/line-split": "7.4.0",
+    "@turf/nearest-point-on-line": "7.4.0",
+    "csv-parse": "7.0.2",
+    "fast-xml-parser": "5.11.1",
+    "proj4": "2.21.0",
+    "shapefile": "0.6.6",
+    "unzipper": "0.12.5",
+    "zod": "4.5.2"
+  },
+  "devDependencies": {
+    "@types/geojson": "7946.0.16",
+    "@types/node": "24.13.3",
+    "@types/shapefile": "0.6.4",
+    "@types/unzipper": "0.10.11",
+    "tsx": "4.23.12",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
+  }
+}

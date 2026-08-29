@@ -1,0 +1,222 @@
+import { z } from "zod";
+
+import type {
+  LineString,
+  MultiLineString,
+  MultiPolygon,
+  Point,
+} from "geojson";
+
+export const trafficQualitySchema = z.enum([
+  "measured",
+  "modeled",
+  "interpolated",
+  "unknown",
+]);
+
+export type TrafficQuality = z.infer<typeof trafficQualitySchema>;
+
+export const counterTypeSchema = z.enum([
+  "permanent",
+  "rotating",
+  "occasional",
+  "unknown",
+]);
+
+export type CounterType = z.infer<typeof counterTypeSchema>;
+
+export const geographicScopeSchema = z.enum([
+  "inside-municipality",
+  "buffer-only",
+  "outside",
+]);
+
+export type GeographicScope = z.infer<typeof geographicScopeSchema>;
+
+const nullableNonNegativeNumberSchema = z.number().finite().nonnegative().nullable();
+
+export const trafficObservationSchema = z.object({
+  id: z.string().min(1),
+  sourceRecordId: z.string().min(1),
+  stationId: z.string().min(1).optional(),
+  sourceGeometryId: z.string().min(1).optional(),
+  year: z.number().int().min(1900).max(2100),
+  periodType: z.literal("annual"),
+  vehiclesPerDay: nullableNonNegativeNumberSchema,
+  heavyVehiclePercent: z.number().finite().min(0).max(100).nullable(),
+  quality: trafficQualitySchema,
+  sourceId: z.string().min(1),
+});
+
+export const phase1TrafficObservationSchema = trafficObservationSchema.refine(
+  (observation) => observation.quality !== "interpolated",
+  {
+    message: "Phase 1 must not emit interpolated traffic observations",
+    path: ["quality"],
+  },
+);
+
+export type TrafficObservation = z.infer<typeof trafficObservationSchema>;
+export type Phase1TrafficObservation = z.infer<
+  typeof phase1TrafficObservationSchema
+>;
+
+export interface SourceArtifact {
+  readonly id: string;
+  readonly sourceId: string;
+  readonly sourceUrl: string;
+  readonly originalFilename: string;
+  readonly acquiredAt: string;
+  readonly sha256: string;
+  readonly byteSize: number;
+  readonly crs: string | null;
+  readonly adapterVersion: string;
+}
+
+export interface SourceDefinition {
+  readonly id: string;
+  readonly title: string;
+  readonly datasetUrl: string;
+  readonly resourceUrl: string;
+  readonly coverageYears: readonly [number, number];
+  readonly geometryKind: "point" | "line";
+  readonly publicationDate: string;
+  readonly adapterVersion: string;
+  readonly expectedFormats: readonly ("zip" | "shp" | "geojson")[];
+  readonly license: {
+    readonly code: "lov2" | "not-specified";
+    readonly label: string;
+    readonly url: string | null;
+    readonly redistributionAllowed: boolean;
+    readonly verifiedAt: string;
+  };
+}
+
+export interface SourceFieldInspection {
+  readonly name: string;
+  readonly inferredTypes: readonly string[];
+  readonly nullCount: number;
+  readonly sampleValues: readonly unknown[];
+}
+
+export interface SourceInspection {
+  readonly sourceId: string;
+  readonly artifactId: string;
+  readonly geometryTypes: readonly string[];
+  readonly crs: string | null;
+  readonly encoding: string | null;
+  readonly recordCount: number;
+  readonly fields: readonly SourceFieldInspection[];
+  readonly issues: readonly AuditIssue[];
+}
+
+export interface SourceRecord {
+  readonly id: string;
+  readonly sourceId: string;
+  readonly artifactId: string;
+  readonly externalId?: string;
+  readonly geometry: Point | LineString | MultiLineString;
+  readonly properties: Readonly<Record<string, unknown>>;
+}
+
+export interface TrafficStation {
+  readonly kind: "station";
+  readonly id: string;
+  readonly sourceId: string;
+  readonly sourceRecordId: string;
+  readonly sourceStationId?: string;
+  readonly counterType: CounterType;
+  readonly location: Point;
+  readonly roadRef?: string;
+  readonly roadName?: string;
+  readonly bearing?: number;
+}
+
+export interface LinearTrafficRecord {
+  readonly kind: "linear-traffic";
+  readonly id: string;
+  readonly sourceId: string;
+  readonly sourceRecordId: string;
+  readonly geometry: LineString | MultiLineString;
+  readonly roadRef?: string;
+  readonly roadName?: string;
+  readonly observation: Phase1TrafficObservation;
+}
+
+export type NormalizedEvidence =
+  | TrafficStation
+  | Phase1TrafficObservation
+  | LinearTrafficRecord;
+
+export interface TrafficSourceAdapter {
+  inspect(artifact: SourceArtifact): Promise<SourceInspection>;
+  normalize(artifact: SourceArtifact): AsyncIterable<NormalizedEvidence>;
+}
+
+export interface ContinuityCandidate {
+  readonly leftStationId: string;
+  readonly rightStationId: string;
+  readonly score: number;
+  readonly classification: "probable" | "review" | "separate";
+  readonly rejectedReason?: string;
+  readonly evidence: Readonly<Record<string, number | string | boolean>>;
+}
+
+export interface RoadMatchCandidate {
+  readonly stationId: string;
+  readonly osmWayId: string;
+  readonly score: number;
+  readonly runnerUpGap: number | null;
+  readonly classification: "plausible" | "ambiguous" | "unmatched";
+  readonly distanceMeters: number;
+  readonly rejectedReason?: string;
+  readonly evidence: Readonly<Record<string, number | string | boolean>>;
+}
+
+export interface AuditIssue {
+  readonly code: string;
+  readonly severity: "info" | "warning" | "error";
+  readonly sourceId?: string;
+  readonly sourceRecordId?: string;
+  readonly message: string;
+}
+
+export interface SourceAuditStatus {
+  readonly sourceId: string;
+  readonly status: "audited" | "blocked";
+  readonly artifactId?: string;
+  readonly blockedReason?: string;
+  readonly inspection?: SourceInspection;
+}
+
+export interface AuditSummary {
+  readonly schemaVersion: 1;
+  readonly asOf: string;
+  readonly city: {
+    readonly name: "Biarritz";
+    readonly inseeCode: "64122";
+    readonly boundary: MultiPolygon;
+    readonly bufferKilometers: 2;
+  };
+  readonly sources: readonly SourceAuditStatus[];
+  readonly years: readonly number[];
+  readonly counts: Readonly<Record<string, number>>;
+  readonly qualityCounts: Readonly<Record<TrafficQuality, number>>;
+  readonly issues: readonly AuditIssue[];
+  readonly recommendation:
+    | "road-level-measured-mvp"
+    | "limited-corridor-or-station-explorer"
+    | "insufficient-open-data";
+}
+
+export interface AuditConfig {
+  readonly asOf: string;
+  readonly cacheDirectory: string;
+  readonly outputDirectory: string;
+  readonly boundaryInseeCode: "64122";
+  readonly bufferKilometers: 2;
+}
+
+export interface AuditRunner {
+  run(config: AuditConfig): Promise<AuditSummary>;
+}

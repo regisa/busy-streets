@@ -1,0 +1,13 @@
+node_modules/
+coverage/
+
+# Full source artifacts and generated audit working data remain local.
+.cache/traffic/
+artifacts/traffic/
+
+# Local environment files are never source inputs.
+.env
+.env.*
+!.env.example
+
+.DS_Store
