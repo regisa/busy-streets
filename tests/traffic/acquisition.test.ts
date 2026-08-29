@@ -98,6 +98,7 @@ describe("source acquisition", () => {
     expect(result.artifact.sourceId).toBe("dreal-2023-linear");
     expect(result.artifact.sourceUrl).toBe(source.datasetUrl);
     expect(result.artifact.originalFilename).toBe("linear-2023.zip");
+    expect(result.artifact).toHaveProperty("license", source.license);
     expect(result.localPath).toContain(result.artifact.sha256);
   });
 });

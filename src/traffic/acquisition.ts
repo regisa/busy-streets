@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { access, copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 
 import type { SourceArtifact, SourceDefinition } from "./contracts.js";
@@ -13,6 +13,12 @@ export interface AcquisitionOptions {
 export interface ManualRegistrationOptions {
   readonly cacheDirectory: string;
   readonly now: () => string;
+}
+
+export interface ArtifactAcquisitionRequest {
+  readonly sourceUrl: string;
+  readonly fallbackFilename?: string;
+  readonly crs: string | null;
 }
 
 export type AcquisitionResult =
@@ -38,10 +44,15 @@ function isHtml(contentType: string | null, bytes: Uint8Array): boolean {
   return /^<!doctype html|^<html/i.test(prefix);
 }
 
-function responseFilename(response: Response, source: SourceDefinition): string {
+function responseFilename(
+  response: Response,
+  source: SourceDefinition,
+  fallbackFilename?: string,
+): string {
   const disposition = response.headers.get("content-disposition");
   const match = disposition?.match(/filename\*?=(?:UTF-8''|\")?([^";]+)/i);
   if (match?.[1]) return basename(decodeURIComponent(match[1].replace(/"$/, "")));
+  if (fallbackFilename) return basename(fallbackFilename);
 
   const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
   if (contentType.includes("zip")) return `${source.id}.zip`;
@@ -65,6 +76,7 @@ async function storeArtifact(
   acquiredAt: string,
   cacheDirectory: string,
   sourceUrl: string,
+  crs: string | null,
 ): Promise<{ artifact: SourceArtifact; localPath: string }> {
   const checksum = sha256(bytes);
   const artifactDirectory = join(cacheDirectory, "raw", source.id, checksum);
@@ -81,8 +93,9 @@ async function storeArtifact(
     acquiredAt,
     sha256: checksum,
     byteSize: bytes.byteLength,
-    crs: null,
+    crs,
     adapterVersion: source.adapterVersion,
+    license: source.license,
   };
 
   const provenancePath = join(
@@ -100,7 +113,19 @@ export async function acquireSource(
   source: SourceDefinition,
   options: AcquisitionOptions,
 ): Promise<AcquisitionResult> {
-  const response = await options.fetch(source.resourceUrl);
+  return acquireRequestedArtifact(
+    source,
+    { sourceUrl: source.resourceUrl, crs: null },
+    options,
+  );
+}
+
+export async function acquireRequestedArtifact(
+  source: SourceDefinition,
+  request: ArtifactAcquisitionRequest,
+  options: AcquisitionOptions,
+): Promise<AcquisitionResult> {
+  const response = await options.fetch(request.sourceUrl);
 
   if (response.status === 403 || response.status === 401) {
     return {
@@ -129,11 +154,12 @@ export async function acquireSource(
 
   const stored = await storeArtifact(
     source,
-    responseFilename(response, source),
+    responseFilename(response, source, request.fallbackFilename),
     bytes,
     options.now(),
     options.cacheDirectory,
-    source.resourceUrl,
+    request.sourceUrl,
+    request.crs,
   );
   return { kind: "acquired", ...stored };
 }
@@ -151,10 +177,8 @@ export async function registerManualArtifact(
     options.now(),
     options.cacheDirectory,
     source.datasetUrl,
+    null,
   );
 
-  if (stored.localPath !== suppliedPath && !(await fileExists(stored.localPath))) {
-    await copyFile(suppliedPath, stored.localPath);
-  }
   return stored;
 }

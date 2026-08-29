@@ -7,8 +7,9 @@ Biarritz when the available evidence supports a comparison.
 The project is currently in Phase 1: data discovery. There is no web
 application, database, production road network, or complete audit pipeline in
 this repository yet. The current code defines the first traffic-data contracts,
-catalogues six DREAL Nouvelle-Aquitaine sources, and handles the first automatic
-and manual acquisition cases.
+catalogues six DREAL Nouvelle-Aquitaine sources, acquires official WFS samples
+and `DescribeFeatureType` schemas or manual artifacts, and produces deterministic
+schema inspections.
 
 Sparse coverage is an acceptable result. The project will not fill gaps or
 present estimates as measurements to make the map look complete.
@@ -46,8 +47,32 @@ pnpm test
 ```
 
 `pnpm check` runs both commands. The `traffic:*` scripts in `package.json` are
-reserved for the planned audit CLI and are not operational because
-`scripts/traffic/cli.ts` has not been implemented.
+reserved for the audit workspace. `traffic:inspect` is operational. The audit,
+register, and verify commands remain unimplemented.
+
+Inspect a source with official WFS access:
+
+```sh
+pnpm traffic:inspect --source dreal-2024-point --sample-size 100
+```
+
+Inspect a manually downloaded Shapefile ZIP:
+
+```sh
+pnpm traffic:inspect \
+  --source dreal-2011-2015-point \
+  --artifact /absolute/path/to/download.zip
+```
+
+A Shapefile ZIP must include matching `.shp`, `.shx`, `.dbf`, and `.prj`
+components. It must also include a `.cpg` encoding declaration, or the operator
+must provide the known encoding explicitly, for example `--encoding utf-8`.
+Inspection never guesses a DBF text encoding.
+
+The command stores downloads under `.cache/traffic/` and writes inspection JSON
+under `artifacts/traffic/inspections/`. Both locations are gitignored. WFS field
+coverage comes from `DescribeFeatureType`; record counts, null counts, and sample
+values describe the requested feature sample, not the complete regional dataset.
 
 Do not commit downloaded source files. The acquisition layer stores raw
 artifacts and provenance in gitignored local cache paths.

@@ -61,6 +61,14 @@ export type Phase1TrafficObservation = z.infer<
   typeof phase1TrafficObservationSchema
 >;
 
+export interface SourceLicense {
+  readonly code: "lov2" | "not-specified";
+  readonly label: string;
+  readonly url: string | null;
+  readonly redistributionAllowed: boolean;
+  readonly verifiedAt: string;
+}
+
 export interface SourceArtifact {
   readonly id: string;
   readonly sourceId: string;
@@ -71,6 +79,7 @@ export interface SourceArtifact {
   readonly byteSize: number;
   readonly crs: string | null;
   readonly adapterVersion: string;
+  readonly license: SourceLicense;
 }
 
 export interface SourceDefinition {
@@ -83,13 +92,14 @@ export interface SourceDefinition {
   readonly publicationDate: string;
   readonly adapterVersion: string;
   readonly expectedFormats: readonly ("zip" | "shp" | "geojson")[];
-  readonly license: {
-    readonly code: "lov2" | "not-specified";
-    readonly label: string;
-    readonly url: string | null;
-    readonly redistributionAllowed: boolean;
-    readonly verifiedAt: string;
+  readonly wfs?: {
+    readonly endpoint: string;
+    readonly typeName: string;
+    readonly version: "2.0.0";
+    readonly outputFormat: "application/json; subtype=geojson";
+    readonly outputCrs: "EPSG:4326";
   };
+  readonly license: SourceLicense;
 }
 
 export interface SourceFieldInspection {
@@ -102,6 +112,7 @@ export interface SourceFieldInspection {
 export interface SourceInspection {
   readonly sourceId: string;
   readonly artifactId: string;
+  readonly schemaArtifactId?: string;
   readonly geometryTypes: readonly string[];
   readonly crs: string | null;
   readonly encoding: string | null;
