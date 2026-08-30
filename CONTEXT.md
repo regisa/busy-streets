@@ -29,16 +29,34 @@ audit is complete and the operator approves the next phase.
   merely because they are nearby.
 - **Traffic observation**: an annual value tied to source evidence and,
   optionally, a source station.
+- **Comparison subject**: an explicit derived key used to compare observations
+  that the audit has already decided belong together. It is not a production
+  station or road ID and does not merge source evidence.
+- **Reconciled observation**: a derived annual group that keeps all distinct
+  value-and-quality variants and their source links. It has a canonical variant
+  only when the precedence rules resolve the evidence.
 - **Linear traffic record**: traffic evidence supplied on a source road
   geometry. Phase 1 preserves that geometry and any intersections derived from
   it.
 - **Continuity candidate**: a derived proposal that two source stations may be
   the same counter over time. It never rewrites either station.
 - **Road-match candidate**: a dated Phase 1 assessment of whether a station can
-  be associated with a current OpenStreetMap road. It is not a production road
-  ID.
+  be associated with one current OpenStreetMap way. A rejected candidate can
+  retain a hard road-reference conflict for audit evidence.
+- **Station road-match result**: the plausible, ambiguous, or unmatched outcome
+  derived from the ordered candidates for one source-scoped station. It is not
+  a production road ID and does not mutate the station or its observations.
 - **Audit summary**: the deterministic machine-readable result from which the
   human audit report will be generated.
+- **Traffic count**: a vehicle volume tied to a counter or an explicitly modeled
+  volume. Route duration, speed, congestion class, and navigation-probe sample
+  size are not traffic counts.
+- **Target street corridor**: a fixed, reviewed geometry for Avenue de Verdun or
+  Avenue de la Gare. A nearby station, similarly named road, or broader D810
+  corridor is not a substitute.
+- **Connected-vehicle passage count**: the number of contributing provider-panel
+  vehicle trips observed on a road section. It is not a total traffic count
+  unless the provider documents and supplies a validated expansion method.
 
 ## Traffic quality
 
@@ -76,12 +94,25 @@ test, a completed audit, and a deployed product are different kinds of evidence.
 - Keep every normalized observation. Reconciliation is a derived view.
 - Preserve unresolved equal-authority conflicts and exclude them from
   comparisons.
+- Never infer a comparison subject inside reconciliation. Continuity remains a
+  separate derived assessment.
 - Report the commune and 2 km buffer separately.
 - Do not turn a nearby station into an ingress candidate unless a plausible road
   corridor crosses the commune boundary.
 - Treat the OSM probe as current and dated. Preserve its checksum and ODbL
   attribution.
 - Never calculate a citywide traffic total by summing road segments.
+- Do not claim that the product goal is met unless Avenue de Verdun and Avenue de
+  la Gare have at least three comparable historical periods on their exact
+  corridors.
+- Do not compare vendor probe counts across years without evidence that panel,
+  penetration, map-version, and normalization changes cannot explain the trend.
+- Do not buy a commercial source before an exact-street sample proves coverage
+  for both avenues and the contract permits permanent retention and public
+  derived charts.
+- Keep total external data and service spending for the POC at or below EUR 100
+  including VAT. This cap does not authorize a purchase, subscription, paid
+  trial, payment method, or account creation.
 - Do not place raw downloads, unclear-licence data, credentials, or cache
   artifacts in Git.
 
@@ -102,7 +133,7 @@ The following are outside Phase 1:
 - Next.js and React application scaffolding;
 - PostgreSQL/PostGIS or Supabase;
 - MapLibre and the production map;
-- TomTom or another commercial provider;
+- Google Maps, TomTom, HERE, or another commercial provider integration;
 - permanent internal road-segment IDs;
 - production map matching;
 - interpolation and seasonal analysis;

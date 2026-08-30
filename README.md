@@ -4,12 +4,30 @@ Busy Streets is the working repository for **Trafic routier à Biarritz**, a
 French-language web application for exploring how road traffic has changed in
 Biarritz when the available evidence supports a comparison.
 
+A defensible historical comparison of Avenue de Verdun and Avenue de la Gare is
+mandatory for the eventual product. Current open evidence does not provide that
+comparison. The project is now also investigating archived public studies and
+commercial street-level data, with a strict sample-before-purchase gate.
+The total external data and service budget for the POC is EUR 100 including VAT.
+
 The project is currently in Phase 1: data discovery. There is no web
-application, database, production road network, or complete audit pipeline in
-this repository yet. The current code defines the first traffic-data contracts,
-catalogues six DREAL Nouvelle-Aquitaine sources, acquires official WFS samples
-and `DescribeFeatureType` schemas or manual artifacts, and produces deterministic
-schema inspections.
+application, database, or production road network in this repository yet. The
+current code defines the traffic-data contracts,
+catalogues six DREAL Nouvelle-Aquitaine sources and one open-licensed CD64
+source, acquires official WFS samples and stable GeoJSON resources,
+and acquires `DescribeFeatureType` schemas or manual artifacts. It produces deterministic
+schema inspections, and normalizes the inspected 2019-2023 and 2024
+point-counter schemas plus the numeric evidence in the 2023 linear schema. It
+also acquires and validates the official Biarritz boundary, derives the separate
+2 km buffer, and provides tested point and line geographic classification. A
+derived reconciliation view and station-continuity scorer implement the
+accepted evidence precedence, conflict, distance, and match-threshold rules. A
+dated, non-production OpenStreetMap probe assesses current in-scope point
+stations without creating permanent road IDs; the present audit snapshot yields
+only ambiguous matches. A deterministic audit runner now produces a local
+machine summary. Its current recommendation is a limited corridor or station
+explorer, but the mandatory Avenue de Verdun and Avenue de la Gare comparison
+is still unsupported.
 
 Sparse coverage is an acceptable result. The project will not fill gaps or
 present estimates as measurements to make the map look complete.
@@ -20,11 +38,14 @@ present estimates as measurements to make the map look complete.
 - [Current status](docs/STATUS.md) records dated implementation and verification
   evidence.
 - [Decisions](docs/DECISIONS.md) records accepted and superseded project choices.
+- [Traffic source research](docs/SOURCE-RESEARCH.md) records dated public and
+  commercial source findings, including Google Maps.
 - [Context](CONTEXT.md) defines the domain vocabulary and Phase 1 invariants.
 
 The final data audit will be generated at
-`docs/biarritz-traffic-data-audit.md` only after the audit runner can produce an
-evidence-backed machine summary. That report does not exist yet.
+`docs/biarritz-traffic-data-audit.md` only after the current machine summary has
+been reviewed and the remaining source blockers have been assessed. That human
+report does not exist yet.
 
 ## Development
 
@@ -46,14 +67,29 @@ pnpm typecheck
 pnpm test
 ```
 
-`pnpm check` runs both commands. The `traffic:*` scripts in `package.json` are
-reserved for the audit workspace. `traffic:inspect` is operational. The audit,
-register, and verify commands remain unimplemented.
+`pnpm check` runs both commands. `traffic:inspect` and `traffic:audit` are
+operational. The register and verify commands remain unimplemented.
+
+Run the dated Biarritz audit:
+
+```sh
+pnpm traffic:audit --as-of 2026-08-29
+```
+
+The command fixes the Phase 1 scope to Biarritz INSEE `64122` plus the separate
+2 km buffer. It writes `artifacts/traffic/audit/audit-summary.json`; that local
+output and its source cache are gitignored.
 
 Inspect a source with official WFS access:
 
 ```sh
 pnpm traffic:inspect --source dreal-2024-point --sample-size 100
+```
+
+Inspect the stable official CD64 GeoJSON export:
+
+```sh
+pnpm traffic:inspect --source cd64-latest-road-counts-point
 ```
 
 Inspect a manually downloaded Shapefile ZIP:
@@ -88,8 +124,8 @@ INSEE, and OpenStreetMap remain unchanged where that is clearer.
 
 Project code is licensed under the [Apache License 2.0](LICENSE).
 
-That licence does not grant rights to DREAL source artifacts, normalized sample
-data, or OpenStreetMap-derived data. Each dataset keeps its own licence and
+That licence does not grant rights to third-party source artifacts, normalized
+sample data, or OpenStreetMap-derived data. Each dataset keeps its own licence and
 attribution requirements. OpenStreetMap-derived outputs must retain the required
 OpenStreetMap attribution and comply with the
 [Open Database License](https://www.openstreetmap.org/copyright).

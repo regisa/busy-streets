@@ -5,6 +5,7 @@ import type {
   MultiLineString,
   MultiPolygon,
   Point,
+  Polygon,
 } from "geojson";
 
 export const trafficQualitySchema = z.enum([
@@ -32,6 +33,26 @@ export const geographicScopeSchema = z.enum([
 ]);
 
 export type GeographicScope = z.infer<typeof geographicScopeSchema>;
+
+export interface BiarritzGeographicFrame {
+  readonly inseeCode: "64122";
+  readonly boundary: MultiPolygon;
+  readonly buffer: Polygon | MultiPolygon;
+  readonly bufferKilometers: 2;
+}
+
+export interface LinearGeographicCoverage {
+  readonly municipalityIntersects: boolean;
+  readonly bufferIntersects: boolean;
+  readonly lengthInsideMunicipalityKilometers: number;
+}
+
+export interface Wgs84BoundingBox {
+  readonly west: number;
+  readonly south: number;
+  readonly east: number;
+  readonly north: number;
+}
 
 const nullableNonNegativeNumberSchema = z.number().finite().nonnegative().nullable();
 
@@ -82,6 +103,12 @@ export interface SourceArtifact {
   readonly license: SourceLicense;
 }
 
+export type ArtifactPathResolver = (
+  artifact: SourceArtifact,
+) => Promise<string>;
+
+export type TrafficIssueReporter = (issue: AuditIssue) => void;
+
 export interface SourceDefinition {
   readonly id: string;
   readonly title: string;
@@ -92,6 +119,7 @@ export interface SourceDefinition {
   readonly publicationDate: string;
   readonly adapterVersion: string;
   readonly expectedFormats: readonly ("zip" | "shp" | "geojson")[];
+  readonly resourceCrs?: "EPSG:4326";
   readonly wfs?: {
     readonly endpoint: string;
     readonly typeName: string;
@@ -159,6 +187,23 @@ export type NormalizedEvidence =
   | Phase1TrafficObservation
   | LinearTrafficRecord;
 
+export type GeographicTrafficStation = TrafficStation & {
+  readonly geographicScope: GeographicScope;
+};
+
+export type GeographicTrafficObservation = Phase1TrafficObservation & {
+  readonly geographicScope: GeographicScope;
+};
+
+export type GeographicLinearTrafficRecord = LinearTrafficRecord & {
+  readonly geographicCoverage: LinearGeographicCoverage;
+};
+
+export type GeographicEvidence =
+  | GeographicTrafficStation
+  | GeographicTrafficObservation
+  | GeographicLinearTrafficRecord;
+
 export interface TrafficSourceAdapter {
   inspect(artifact: SourceArtifact): Promise<SourceInspection>;
   normalize(artifact: SourceArtifact): AsyncIterable<NormalizedEvidence>;
@@ -169,6 +214,7 @@ export interface ContinuityCandidate {
   readonly rightStationId: string;
   readonly score: number;
   readonly classification: "probable" | "review" | "separate";
+  readonly distanceMeters: number;
   readonly rejectedReason?: string;
   readonly evidence: Readonly<Record<string, number | string | boolean>>;
 }
@@ -177,11 +223,29 @@ export interface RoadMatchCandidate {
   readonly stationId: string;
   readonly osmWayId: string;
   readonly score: number;
-  readonly runnerUpGap: number | null;
-  readonly classification: "plausible" | "ambiguous" | "unmatched";
   readonly distanceMeters: number;
   readonly rejectedReason?: string;
   readonly evidence: Readonly<Record<string, number | string | boolean>>;
+}
+
+export interface StationRoadMatchResult {
+  readonly stationId: string;
+  readonly classification: "plausible" | "ambiguous" | "unmatched";
+  readonly searchRadiusMeters: 75 | 200;
+  readonly selected: RoadMatchCandidate | null;
+  readonly runnerUpGap: number | null;
+  readonly candidates: readonly RoadMatchCandidate[];
+  readonly rejectedCandidates: readonly RoadMatchCandidate[];
+}
+
+export interface OsmMatchabilityProbe {
+  readonly schemaVersion: 1;
+  readonly osmExtract: {
+    readonly artifactId: string;
+    readonly sha256: string;
+    readonly osmBaseTimestamp: string;
+  };
+  readonly results: readonly StationRoadMatchResult[];
 }
 
 export interface AuditIssue {

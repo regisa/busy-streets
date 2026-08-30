@@ -138,6 +138,29 @@ export const DREAL_TRAFFIC_SOURCES = [
   },
 ] as const satisfies readonly SourceDefinition[];
 
+export const CD64_TRAFFIC_SOURCES = [
+  {
+    id: "cd64-latest-road-counts-point",
+    title: "Pyrénées-Atlantiques: latest departmental road count by location",
+    datasetUrl:
+      "https://data.le64.fr/explore/dataset/comptages_routiers/",
+    resourceUrl:
+      "https://data.le64.fr/api/explore/v2.1/catalog/datasets/comptages_routiers/exports/geojson?lang=fr&timezone=Europe%2FParis",
+    coverageYears: [2012, 2022],
+    geometryKind: "point",
+    publicationDate: "2026-08-29",
+    adapterVersion: "1",
+    expectedFormats: ["geojson"],
+    resourceCrs: "EPSG:4326",
+    license: OPEN_LICENCE_2,
+  },
+] as const satisfies readonly SourceDefinition[];
+
+export const TRAFFIC_SOURCES = [
+  ...DREAL_TRAFFIC_SOURCES,
+  ...CD64_TRAFFIC_SOURCES,
+] as const satisfies readonly SourceDefinition[];
+
 export function findTrafficSource(sourceId: string): SourceDefinition | null {
-  return DREAL_TRAFFIC_SOURCES.find((source) => source.id === sourceId) ?? null;
+  return TRAFFIC_SOURCES.find((source) => source.id === sourceId) ?? null;
 }

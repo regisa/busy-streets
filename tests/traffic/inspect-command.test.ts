@@ -24,6 +24,71 @@ afterEach(async () => {
 });
 
 describe("traffic inspect command", () => {
+  test("downloads and inspects a stable non-WFS GeoJSON resource", async () => {
+    const cacheDirectory = await temporaryDirectory();
+    const outputDirectory = await temporaryDirectory();
+    const geojson = JSON.stringify({
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: {
+            annee: "2022",
+            voie: "RD 810",
+            code_insee: "64122",
+            mja: 35_551,
+            mjappl: 2.66,
+            id: "86",
+          },
+          geometry: {
+            type: "Point",
+            coordinates: [-1.5434754896, 43.4642264044],
+          },
+        },
+      ],
+    });
+
+    const exitCode = await runTrafficCli(
+      [
+        "inspect",
+        "--source",
+        "cd64-latest-road-counts-point",
+        "--cache-dir",
+        cacheDirectory,
+        "--output-dir",
+        outputDirectory,
+      ],
+      {
+        fetch: async () =>
+          new Response(geojson, {
+            headers: { "content-type": "application/geo+json" },
+          }),
+        now: () => "2026-08-29T17:00:00.000Z",
+        stdout: () => undefined,
+        stderr: () => undefined,
+      },
+    );
+
+    const inspection = JSON.parse(
+      await readFile(
+        join(
+          outputDirectory,
+          "cd64-latest-road-counts-point.inspection.json",
+        ),
+        "utf8",
+      ),
+    );
+    expect(exitCode).toBe(0);
+    expect(inspection).toMatchObject({
+      sourceId: "cd64-latest-road-counts-point",
+      crs: "EPSG:4326",
+      encoding: "utf-8",
+      recordCount: 1,
+      geometryTypes: ["Point"],
+    });
+    expect(inspection).not.toHaveProperty("schemaArtifactId");
+  });
+
   test("writes byte-identical WFS inspections across acquisition times", async () => {
     const cacheDirectory = await temporaryDirectory();
     const outputDirectory = await temporaryDirectory();

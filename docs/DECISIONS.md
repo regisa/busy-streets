@@ -82,6 +82,9 @@ corridor crosses the commune boundary.
 
 The project keeps every normalized observation. It collapses exact duplicates
 only in a derived reconciliation view and retains links to every source record.
+An exact duplicate has the same explicit comparison subject, annual year,
+traffic values, and quality. The caller supplies the comparison subject;
+reconciliation does not infer station continuity or create a production ID.
 
 Conflicts use this precedence:
 
@@ -90,7 +93,9 @@ Conflicts use this precedence:
 3. no canonical value when equally authoritative observations disagree.
 
 Unresolved conflicts remain visible and are excluded from comparisons. Phase 1
-does not emit interpolated observations.
+does not emit interpolated observations. Publication precedence uses the dated
+official source definition. A repeated value may retain links from several
+publications without duplicating the value variant.
 
 ## D-007: Score station continuity without merging source stations
 
@@ -112,6 +117,11 @@ A score of at least `0.85` is probable continuity. Scores from `0.65` through
 `0.849` require review. Lower scores remain separate stations. This classification
 does not mutate either source station.
 
+The 150 m candidate gate contributes the full distance weight. Exact external
+IDs use their source-normalized values. Road references ignore case and spaces;
+road names ignore case, accents, and punctuation. A counter-type match scores
+only when both values are known. Missing and unknown evidence scores zero.
+
 ## D-008: Treat OSM matching as a dated probe
 
 - Status: Accepted
@@ -122,7 +132,11 @@ records the timestamp and checksum and retains OpenStreetMap attribution under
 the ODbL.
 
 Candidate search starts within 75 m and expands to 200 m only when the first
-search finds none. Contradictory known road references reject a candidate.
+search finds no candidate, including a candidate later rejected for conflicting
+evidence. Contradictory known road references reject a candidate. OSM `ref`
+values are split on semicolons and compared after
+removing spaces and hyphens and normalizing case. Names ignore case, accents,
+and punctuation.
 
 | Evidence | Weight |
 | --- | ---: |
@@ -133,8 +147,23 @@ search finds none. Contradictory known road references reject a candidate.
 | Bearing | 0.05 |
 
 A match is plausible only when its score is at least `0.80` and leads the next
-candidate by at least `0.15`. Other results are ambiguous or unmatched. The probe
-does not create production road IDs or change observations.
+candidate by at least `0.15`. A qualifying candidate with no runner-up is
+unopposed and therefore satisfies the lead rule. Other results are ambiguous or
+unmatched.
+
+Distance credit decreases linearly from `0.40` at the station to zero at 200 m.
+Road-class credit is available only when a known French road reference supplies
+an expected class: `A` accepts motorway or trunk, `N` accepts trunk or primary,
+and `D` accepts primary, secondary, or tertiary, including their link classes.
+Bearing credit decreases linearly to zero at a 45-degree difference and treats
+opposite OSM digitization directions as the same road axis. Missing evidence
+scores zero. Candidate ordering is score descending, distance ascending, then
+numeric OSM way ID. The probe does not create production road IDs or change
+observations. Ordering, threshold checks, and runner-up comparisons use
+full-precision scores; rounding is presentation-only.
+Inclusive threshold decisions allow a `1e-12` numerical tolerance solely for
+binary floating-point representation of mathematically exact decimal sums. The
+tolerance does not alter or round the retained score.
 
 ## D-009: Use a Node-first TypeScript workspace under operator control
 
@@ -186,3 +215,102 @@ Status uses `Implemented`, `Verified`, `Blocked/manual input`, `Planned`, and
 `Deferred`. A feature is verified only when the status names a fresh check and
 date. The human audit report is generated only after its machine summary exists;
 the repository does not keep a placeholder report.
+
+## D-013: Admit the CD64 latest-count source to Phase 1
+
+- Status: Accepted
+- Accepted: 2026-08-29
+
+The official CD64 `Comptages routiers` GeoJSON source joins the six required
+DREAL sources. Its Open Licence 2.0 metadata permits tracked samples. The source
+retains only the most recent annual count at each location, so it cannot be
+presented as a complete 2012-2022 series.
+
+The adapter treats MJA and heavy-vehicle share as measured annual evidence. It
+keeps counter type `unknown` because the record schema does not identify each
+counter as permanent or rotating. The source-scoped station ID retains CD64 ID
+`86`. When road and PR fields are valid, the adapter also derives the
+source-normalized continuity identifier used by the DREAL schema, for example
+`64-D810-12+520`. Reconciliation must retain links to both CD64 and DREAL when
+they describe the same comparison subject.
+
+The separate CD64 monthly source remains supplementary. Its catalogue licence
+is unspecified and its aggregates do not yet establish a valid denominator for
+annual normalization.
+
+## D-014: Keep navigation data outside the measured-count pipeline
+
+- Status: Accepted
+- Accepted: 2026-08-29
+
+Google Routes, Roads, TrafficLayer, Waze, TomTom Traffic Stats, and HERE Traffic
+Analytics do not provide open measured annual road counts suitable for the
+Phase 1 pipeline. Congestion, speed, route duration, and probe sample size remain
+separate evidence types.
+
+Google Roads Management Insights may reflect tourist route use through
+aggregated Google Maps data, but collection starts after commercial onboarding.
+It is not a retroactive 2011-2024 archive. TomTom Traffic Stats has historical
+France coverage from 2008 and is the strongest commercial comparison source
+found for speed and travel time, not vehicle counts.
+
+No commercial provider enters Phase 1 without operator approval for access,
+cost, credentials, terms, and retained-data rules. Detailed evidence and links
+live in [Traffic source research](SOURCE-RESEARCH.md).
+
+## D-015: Make the two-street comparison a product viability gate
+
+- Status: Accepted
+- Accepted: 2026-08-29
+
+The eventual product must compare traffic evolution on Avenue de Verdun and
+Avenue de la Gare. Evidence on a nearby D810 station or another road does not
+meet this requirement. The audit may still finish successfully with sparse open
+data, but Phase 2 must not start as the intended product unless the project has a
+credible evidence path for both exact street corridors.
+
+Commercial acquisition is allowed as a researched option. Before any purchase,
+the provider must return a sample or coverage report for both corridors and at
+least three materially separated historical periods using the same metric and
+methodology. The evidence must state whether values are physical counts,
+connected-vehicle passage samples, or modeled total volumes. It must also expose
+sample coverage or confidence, missing periods, map-version handling, and
+methodological changes that could imitate a traffic trend.
+
+The contract must permit permanent retention of the purchased history and
+public display of non-reconstructive, street-level derived charts in the French
+application. A purchase must include a no-charge or termination condition if
+either target street fails the agreed coverage threshold. Account creation,
+trials, vendor contact, purchase, and contract acceptance remain under operator
+control.
+
+The preferred acquisition order is:
+
+1. request existing 2015 traffic-survey files and 2018/2022 noise-model inputs
+   from the responsible public bodies;
+2. request exact-street samples and quotes from Michelin Mobility Intelligence
+   and MyTraffic for passage or modeled-volume history;
+3. use TomTom Traffic Stats or INRIX Roadway Analytics as a separate historical
+   speed and travel-time corroborator when exact-street coverage is adequate;
+4. commission simultaneous counts on both streets to establish a measured 2026
+   baseline and repeatable future series.
+
+Google Roads Management Insights is not a historical substitute because it
+starts accumulating after route onboarding. New physical counts cannot recreate
+past years. Neither source can meet the mandatory comparison by itself.
+
+## D-016: Cap external POC spending at EUR 100 including VAT
+
+- Status: Accepted
+- Accepted: 2026-08-30
+
+The POC may spend at most EUR 100 including VAT across all external data and
+services. Free public records, open data, and free evaluation samples take
+priority. The cap does not authorize a purchase, subscription, trial, payment
+method, or account creation. Those actions remain under operator control.
+
+A commercial source must pass every coverage, comparability, quality,
+retention, and publication-right requirement in D-015 and fit within the total
+budget. The project rejects a quote above the cap. It also rejects automatic
+renewal and a trial that requires payment details. A no-cost sample may be used
+only after its terms and exact-street coverage are checked.

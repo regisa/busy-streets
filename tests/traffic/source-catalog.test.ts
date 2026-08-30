@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 
-import { DREAL_TRAFFIC_SOURCES } from "../../src/traffic/source-catalog.js";
+import {
+  DREAL_TRAFFIC_SOURCES,
+  TRAFFIC_SOURCES,
+} from "../../src/traffic/source-catalog.js";
 
 describe("DREAL source catalogue", () => {
   test("contains the six approved point and linear datasets through 2024", () => {
@@ -84,5 +87,21 @@ describe("DREAL source catalogue", () => {
         },
       ],
     ]);
+  });
+
+  test("adds the open-licensed CD64 latest-count source without changing the six-source DREAL scope", () => {
+    expect(TRAFFIC_SOURCES.map((source) => source.id)).toEqual([
+      ...DREAL_TRAFFIC_SOURCES.map((source) => source.id),
+      "cd64-latest-road-counts-point",
+    ]);
+    expect(TRAFFIC_SOURCES.at(-1)).toMatchObject({
+      coverageYears: [2012, 2022],
+      geometryKind: "point",
+      expectedFormats: ["geojson"],
+      license: {
+        code: "lov2",
+        redistributionAllowed: true,
+      },
+    });
   });
 });

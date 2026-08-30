@@ -33,6 +33,11 @@ good enough, users will be able to:
 - distinguish measured, modeled, interpolated, and missing values;
 - understand map-matching confidence and known coverage gaps.
 
+The first product release must support a defensible historical comparison of
+Avenue de Verdun and Avenue de la Gare. Nearby D810 observations do not satisfy
+that requirement. Each street needs evidence assigned to its own fixed corridor,
+with comparable years, metric definitions, methodology, and quality metadata.
+
 The visible quality labels will be:
 
 | Stored meaning | French label | Display rule |
@@ -90,4 +95,8 @@ select them for production.
 Phase 1 succeeds when every in-scope source has either been audited or has a
 reproducible blocked reason, the report separates measured and modeled evidence,
 and the recommendation matches the observed coverage. Finding too little open
-data is a valid result.
+data is a valid audit result, but it is not enough to proceed to the intended web
+product. Product viability now also requires a credible acquisition path for the
+mandatory Avenue de Verdun and Avenue de la Gare comparison. That path may use
+licensed commercial data if the contract permits retained analysis and public
+derived charts.

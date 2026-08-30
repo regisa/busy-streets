@@ -115,7 +115,7 @@ export async function acquireSource(
 ): Promise<AcquisitionResult> {
   return acquireRequestedArtifact(
     source,
-    { sourceUrl: source.resourceUrl, crs: null },
+    { sourceUrl: source.resourceUrl, crs: source.resourceCrs ?? null },
     options,
   );
 }

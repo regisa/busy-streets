@@ -2,12 +2,19 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { registerManualArtifact } from "../../src/traffic/acquisition.js";
+import {
+  acquireSource,
+  registerManualArtifact,
+} from "../../src/traffic/acquisition.js";
 import {
   enrichInspectionWithWfsSchema,
   inspectArtifact,
   serializeSourceInspection,
 } from "../../src/traffic/inspection.js";
+import {
+  createDefaultAuditRunner,
+} from "../../src/traffic/audit-runner.js";
+import type { AuditRunner } from "../../src/traffic/contracts.js";
 import { findTrafficSource } from "../../src/traffic/source-catalog.js";
 import { acquireWfsSample, acquireWfsSchema } from "../../src/traffic/wfs.js";
 
@@ -16,6 +23,7 @@ export interface TrafficCliDependencies {
   readonly now: () => string;
   readonly stdout: (message: string) => void;
   readonly stderr: (message: string) => void;
+  readonly auditRunner?: AuditRunner;
 }
 
 function option(args: readonly string[], name: string): string | null {
@@ -59,12 +67,18 @@ async function runInspect(
           now: dependencies.now,
         })),
       }
-    : await acquireWfsSample(source, {
-        cacheDirectory,
-        fetch: dependencies.fetch,
-        now: dependencies.now,
-        sampleSize,
-      });
+    : source.wfs
+      ? await acquireWfsSample(source, {
+          cacheDirectory,
+          fetch: dependencies.fetch,
+          now: dependencies.now,
+          sampleSize,
+        })
+      : await acquireSource(source, {
+          cacheDirectory,
+          fetch: dependencies.fetch,
+          now: dependencies.now,
+        });
   if (acquisition.kind === "manual-input-required") {
     dependencies.stderr(
       `${source.id} requires manual input: ${acquisition.reason}`,
@@ -77,7 +91,7 @@ async function runInspect(
     localPath: acquisition.localPath,
     ...(encoding ? { encoding } : {}),
   });
-  if (!suppliedArtifact) {
+  if (!suppliedArtifact && source.wfs) {
     const schemaAcquisition = await acquireWfsSchema(source, {
       cacheDirectory,
       fetch: dependencies.fetch,
@@ -101,16 +115,49 @@ async function runInspect(
   return 0;
 }
 
+async function runAudit(
+  args: readonly string[],
+  dependencies: TrafficCliDependencies,
+): Promise<number> {
+  const asOf = option(args, "--as-of");
+  if (!asOf) throw new Error("audit requires --as-of YYYY-MM-DD");
+  const cacheDirectory = resolve(
+    option(args, "--cache-dir") ?? ".cache/traffic",
+  );
+  const outputDirectory = resolve(
+    option(args, "--output-dir") ?? "artifacts/traffic/audit",
+  );
+  const runner =
+    dependencies.auditRunner ??
+    createDefaultAuditRunner({
+      fetch: dependencies.fetch,
+      now: dependencies.now,
+    });
+
+  await runner.run({
+    asOf,
+    cacheDirectory,
+    outputDirectory,
+    boundaryInseeCode: "64122",
+    bufferKilometers: 2,
+  });
+  dependencies.stdout(`Wrote ${join(outputDirectory, "audit-summary.json")}`);
+  return 0;
+}
+
 export async function runTrafficCli(
   args: readonly string[],
   dependencies: TrafficCliDependencies,
 ): Promise<number> {
   try {
     const [command, ...commandArgs] = args;
-    if (command !== "inspect") {
-      throw new Error(`Unsupported traffic command: ${command ?? "none"}`);
+    if (command === "inspect") {
+      return await runInspect(commandArgs, dependencies);
     }
-    return await runInspect(commandArgs, dependencies);
+    if (command === "audit") {
+      return await runAudit(commandArgs, dependencies);
+    }
+    throw new Error(`Unsupported traffic command: ${command ?? "none"}`);
   } catch (error) {
     dependencies.stderr(error instanceof Error ? error.message : String(error));
     return 1;
