@@ -1,6 +1,6 @@
 # Local traffic visualization design
 
-- Status: Approved design, pending implementation plan
+- Status: Approved design with implementation plan
 - Date: 2026-08-30
 - Product title: Trafic routier à Biarritz
 - Delivery boundary: local-only prototype

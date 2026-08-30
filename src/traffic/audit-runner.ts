@@ -1,8 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import type { MultiPolygon } from "geojson";
-
 import type {
   AuditConfig,
   AuditIssue,
@@ -10,59 +8,31 @@ import type {
   AuditSummary,
   BiarritzGeographicFrame,
   GeographicEvidence,
-  GeographicTrafficObservation,
-  GeographicTrafficStation,
   SourceDefinition,
   SourceAuditStatus,
 } from "./contracts.js";
 import { acquireSource } from "./acquisition.js";
 import { createTrafficSourceAdapter } from "./adapters/registry.js";
+import {
+  TrafficAuditEvidenceCollector,
+  type AuditEvidenceCollector,
+  type LoadedAuditSources,
+} from "./audit-evidence.js";
 import { buildAuditSummary, serializeAuditSummary } from "./audit-summary.js";
 import { applyBiarritzGeographicFrame } from "./geographic-evidence.js";
 import { acquireBiarritzBoundary } from "./geography-acquisition.js";
 import {
-  createBiarritzGeographicFrame,
   geographicFrameBoundingBox,
 } from "./geography.js";
 import { enrichInspectionWithWfsSchema } from "./inspection.js";
 import { acquireOsmRoadExtract } from "./osm-acquisition.js";
-import { createOsmMatchabilityProbe } from "./osm-matchability.js";
-import { parseOverpassRoads, type OsmRoad } from "./osm-roads.js";
-import {
-  reconcileTrafficObservations,
-  type ReconciledTrafficObservation,
-} from "./reconciliation.js";
-import { findStationContinuityCandidates } from "./station-continuity.js";
+import { parseOverpassRoads } from "./osm-roads.js";
+import type { ReconciledTrafficObservation } from "./reconciliation.js";
 import { TRAFFIC_SOURCES } from "./source-catalog.js";
 import {
   acquireWfsBoundingBoxSample,
   acquireWfsSchema,
 } from "./wfs.js";
-
-export interface LoadedAuditSources {
-  readonly sources: readonly SourceAuditStatus[];
-  readonly evidence: readonly GeographicEvidence[];
-  readonly issues: readonly AuditIssue[];
-}
-
-export interface LoadedOsmRoads {
-  readonly artifactId: string;
-  readonly sha256: string;
-  readonly osmBaseTimestamp: string;
-  readonly roads: readonly OsmRoad[];
-}
-
-export interface AuditRunnerDependencies {
-  readonly loadBoundary: (config: AuditConfig) => Promise<MultiPolygon>;
-  readonly loadSources: (
-    config: AuditConfig,
-    frame: BiarritzGeographicFrame,
-  ) => Promise<LoadedAuditSources>;
-  readonly loadOsmRoads: (
-    config: AuditConfig,
-    frame: BiarritzGeographicFrame,
-  ) => Promise<LoadedOsmRoads | null>;
-}
 
 export interface DefaultAuditRunnerOptions {
   readonly fetch: typeof globalThis.fetch;
@@ -72,81 +42,58 @@ export interface DefaultAuditRunnerOptions {
 export function createDefaultAuditRunner(
   options: DefaultAuditRunnerOptions,
 ): TrafficAuditRunner {
-  return new TrafficAuditRunner({
-    loadBoundary: async (config) =>
-      (
-        await acquireBiarritzBoundary({
+  return new TrafficAuditRunner(createDefaultAuditEvidenceCollector(options));
+}
+
+export function createDefaultAuditEvidenceCollector(
+  options: DefaultAuditRunnerOptions,
+): TrafficAuditEvidenceCollector {
+  return new TrafficAuditEvidenceCollector({
+      loadBoundary: async (config) =>
+        (
+          await acquireBiarritzBoundary({
+            cacheDirectory: config.cacheDirectory,
+            fetch: options.fetch,
+            now: options.now,
+          })
+        ).boundary,
+      loadSources: (config, frame) =>
+        loadOfficialSources(config, frame, options),
+      loadOsmRoads: async (config, frame) => {
+        const acquired = await acquireOsmRoadExtract({
+          bounds: geographicFrameBoundingBox(frame),
           cacheDirectory: config.cacheDirectory,
           fetch: options.fetch,
           now: options.now,
-        })
-      ).boundary,
-    loadSources: (config, frame) => loadOfficialSources(config, frame, options),
-    loadOsmRoads: async (config, frame) => {
-      const acquired = await acquireOsmRoadExtract({
-        bounds: geographicFrameBoundingBox(frame),
-        cacheDirectory: config.cacheDirectory,
-        fetch: options.fetch,
-        now: options.now,
-      });
-      const parsed = parseOverpassRoads(
-        JSON.parse(await readFile(acquired.localPath, "utf8")),
-      );
-      return {
-        artifactId: acquired.artifact.id,
-        sha256: acquired.artifact.sha256,
-        osmBaseTimestamp: acquired.artifact.osmBaseTimestamp,
-        roads: parsed.roads,
-      };
-    },
-  });
+        });
+        const parsed = parseOverpassRoads(
+          JSON.parse(await readFile(acquired.localPath, "utf8")),
+        );
+        return {
+          artifactId: acquired.artifact.id,
+          sha256: acquired.artifact.sha256,
+          osmBaseTimestamp: acquired.artifact.osmBaseTimestamp,
+          roads: parsed.roads,
+        };
+      },
+    });
 }
 
 export class TrafficAuditRunner implements AuditRunner {
-  constructor(private readonly dependencies: AuditRunnerDependencies) {}
+  constructor(private readonly collector: AuditEvidenceCollector) {}
 
   async run(config: AuditConfig): Promise<AuditSummary> {
-    validateConfig(config);
-    const boundary = await this.dependencies.loadBoundary(config);
-    const frame = createBiarritzGeographicFrame(boundary);
-    const loaded = await this.dependencies.loadSources(config, frame);
-    const stations = loaded.evidence.filter(isStation);
-    const inScopeStations = stations.filter(
-      (station) => station.geographicScope !== "outside",
-    );
-    const observations = loaded.evidence.filter(isPointObservation);
-    const continuityCandidates = findStationContinuityCandidates(inScopeStations);
-    const subjects = comparisonSubjects(inScopeStations, continuityCandidates);
-    const reconciledObservations = reconcileTrafficObservations(
-      observations.flatMap((observation) => {
-        const stationId = observation.stationId;
-        if (!stationId) return [];
-        const subjectId = subjects.get(stationId);
-        return subjectId ? [{ subjectId, observation }] : [];
-      }),
-    );
-    const loadedOsm = await this.dependencies.loadOsmRoads(config, frame);
-    const osmMatchabilityProbe = loadedOsm
-      ? createOsmMatchabilityProbe(
-          {
-            artifactId: loadedOsm.artifactId,
-            sha256: loadedOsm.sha256,
-            osmBaseTimestamp: loadedOsm.osmBaseTimestamp,
-          },
-          inScopeStations,
-          loadedOsm.roads,
-        )
-      : null;
+    const snapshot = await this.collector.collect(config);
     const summary = buildAuditSummary({
       asOf: config.asOf,
-      boundary,
-      sources: loaded.sources,
-      evidence: loaded.evidence,
-      reconciledObservations,
-      continuityCandidates,
-      osmMatchabilityProbe,
-      issues: loaded.issues,
-      recommendation: recommend(reconciledObservations),
+      boundary: snapshot.frame.boundary,
+      sources: snapshot.sources,
+      evidence: snapshot.evidence,
+      reconciledObservations: snapshot.reconciledObservations,
+      continuityCandidates: snapshot.continuityCandidates,
+      osmMatchabilityProbe: snapshot.osmMatchabilityProbe,
+      issues: snapshot.issues,
+      recommendation: recommend(snapshot.reconciledObservations),
     });
 
     await mkdir(config.outputDirectory, { recursive: true });
@@ -155,18 +102,6 @@ export class TrafficAuditRunner implements AuditRunner {
       serializeAuditSummary(summary),
     );
     return summary;
-  }
-}
-
-function validateConfig(config: AuditConfig): void {
-  if (config.boundaryInseeCode !== "64122") {
-    throw new Error("Phase 1 requires Biarritz INSEE code 64122");
-  }
-  if (config.bufferKilometers !== 2) {
-    throw new Error("Phase 1 requires the approved 2 km buffer");
-  }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(config.asOf)) {
-    throw new Error("Audit as-of date must use YYYY-MM-DD");
   }
 }
 
@@ -308,65 +243,6 @@ async function loadOfficialSources(
   }
 
   return { sources, evidence, issues };
-}
-
-function isStation(
-  evidence: GeographicEvidence,
-): evidence is GeographicTrafficStation {
-  return "kind" in evidence && evidence.kind === "station";
-}
-
-function isPointObservation(
-  evidence: GeographicEvidence,
-): evidence is GeographicTrafficObservation {
-  return !("kind" in evidence);
-}
-
-function comparisonSubjects(
-  stations: readonly GeographicTrafficStation[],
-  candidates: ReturnType<typeof findStationContinuityCandidates>,
-): ReadonlyMap<string, string> {
-  const parents = new Map(stations.map((station) => [station.id, station.id]));
-
-  const find = (stationId: string): string => {
-    const parent = parents.get(stationId);
-    if (!parent) throw new Error(`Unknown continuity station: ${stationId}`);
-    if (parent === stationId) return parent;
-    const root = find(parent);
-    parents.set(stationId, root);
-    return root;
-  };
-  const union = (leftStationId: string, rightStationId: string): void => {
-    const leftRoot = find(leftStationId);
-    const rightRoot = find(rightStationId);
-    if (leftRoot === rightRoot) return;
-    const [first, second] = [leftRoot, rightRoot].sort((left, right) =>
-      left.localeCompare(right),
-    );
-    parents.set(second!, first!);
-  };
-
-  for (const candidate of candidates) {
-    if (candidate.classification === "probable") {
-      union(candidate.leftStationId, candidate.rightStationId);
-    }
-  }
-
-  const groups = new Map<string, string[]>();
-  for (const station of stations) {
-    const root = find(station.id);
-    const group = groups.get(root) ?? [];
-    group.push(station.id);
-    groups.set(root, group);
-  }
-
-  const subjects = new Map<string, string>();
-  for (const stationIds of groups.values()) {
-    stationIds.sort((left, right) => left.localeCompare(right));
-    const subjectId = `station-group:${stationIds.join("|")}`;
-    for (const stationId of stationIds) subjects.set(stationId, subjectId);
-  }
-  return subjects;
 }
 
 function recommend(

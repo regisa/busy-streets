@@ -175,8 +175,8 @@ Shapefile parsing, Proj4, and focused Turf modules. Domain code belongs under
 `src/traffic/`; commands belong under `scripts/traffic/`.
 
 Package installation, database mutation, server startup, Git staging and
-commits, deployment, and publication require operator action. Phase 1 does not
-scaffold or start the web application.
+commits, deployment, and publication require operator action. D-017 separately
+authorizes a local-only web prototype without authorizing the agent to start it.
 
 ## D-010: Keep implementation English and the product French
 
@@ -314,3 +314,29 @@ retention, and publication-right requirement in D-015 and fit within the total
 budget. The project rejects a quote above the cap. It also rejects automatic
 renewal and a trial that requires payment details. A no-cost sample may be used
 only after its terms and exact-street coverage are checked.
+
+## D-017: Build a local-only map-led evidence prototype
+
+- Status: Accepted
+- Accepted: 2026-08-30
+
+The project may implement a local Next.js and MapLibre prototype before the
+Phase 1 data audit is complete. This is a visualization aid and evidence probe,
+not approval for deployment, publication, a database, or Phase 2 production
+architecture. Visible application copy is French; code and documentation stay
+English.
+
+IGN BD TOPO `troncon_de_route` is the current reference geometry for the full
+named Biarritz street network and the separate 2 km buffer. Adjacent segments
+with the same normalized name form a source-scoped **street subject** for
+interaction. Avenue de Verdun and Avenue de la Gare are extracted as explicit
+**target corridors** and remain pending operator geometry review. These
+identities are prototypes, not permanent road IDs.
+
+The map uses a neutral local background. OpenStreetMap remains the dated
+station-matchability probe and is not replaced by IGN. Traffic is assigned to a
+street only through an explicit accepted assignment. Name equality, proximity,
+an ambiguous OSM match, or a candidate-review assignment never displays a
+station value as street traffic. The generated visualization bundle and source
+artifacts remain gitignored, and the loader refuses local evidence in a
+production runtime until release rights receive separate approval.

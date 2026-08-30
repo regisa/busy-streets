@@ -1,5 +1,8 @@
 node_modules/
 coverage/
+.next/
+*.tsbuildinfo
+.superpowers/
 
 # Full source artifacts and generated audit working data remain local.
 .cache/traffic/

@@ -10,9 +10,11 @@ comparison. The project is now also investigating archived public studies and
 commercial street-level data, with a strict sample-before-purchase gate.
 The total external data and service budget for the POC is EUR 100 including VAT.
 
-The project is currently in Phase 1: data discovery. There is no web
-application, database, or production road network in this repository yet. The
-current code defines the traffic-data contracts,
+The evidence programme remains in Phase 1: data discovery. A local-only
+Next.js and MapLibre prototype now visualizes the evidence already available;
+it is not a public release, production road network, or claim that the two
+mandatory streets have comparable history. There is no database. The current
+code defines the traffic-data contracts,
 catalogues six DREAL Nouvelle-Aquitaine sources and one open-licensed CD64
 source, acquires official WFS samples and stable GeoJSON resources,
 and acquires `DescribeFeatureType` schemas or manual artifacts. It produces deterministic
@@ -28,6 +30,12 @@ only ambiguous matches. A deterministic audit runner now produces a local
 machine summary. Its current recommendation is a limited corridor or station
 explorer, but the mandatory Avenue de Verdun and Avenue de la Gare comparison
 is still unsupported.
+
+The local prototype opens in a French overview, exposes the complete named IGN
+BD TOPO street network for Biarritz and its 2 km buffer, and lets the operator
+inspect station histories, provenance, quality, and valid same-location year
+comparisons. Avenue de Verdun and Avenue de la Gare are visible priority
+corridors, but both deliberately show that comparison data is unavailable.
 
 Sparse coverage is an acceptable result. The project will not fill gaps or
 present estimates as measurements to make the map look complete.
@@ -68,7 +76,26 @@ pnpm test
 ```
 
 `pnpm check` runs both commands. `traffic:inspect` and `traffic:audit` are
-operational. The register and verify commands remain unimplemented.
+operational. `traffic:visualize` produces the local web bundle. The register and
+verify commands remain unimplemented.
+
+Generate the deterministic, gitignored visualization bundle:
+
+```sh
+pnpm traffic:visualize --as-of 2026-08-29
+```
+
+Then, under operator control, verify and run the local application:
+
+```sh
+pnpm build
+pnpm dev
+```
+
+The application reads
+`artifacts/traffic/visualization/biarritz.json` only in development. A
+production runtime refuses local evidence rather than publishing data whose
+release rights have not been approved.
 
 Run the dated Biarritz audit:
 

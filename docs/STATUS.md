@@ -3,6 +3,7 @@
 - As of: 2026-08-30
 - Phase: 1, data discovery
 - Current machine-audit recommendation: limited corridor or station explorer
+- Local visualization: implemented statically; operator build and browser verification pending
 
 Busy Streets has a tested source catalogue, artifact acquisition path, schema
 inspector, DREAL point adapters for 2019-2023 and 2024, a CD64 latest-count point
@@ -10,7 +11,10 @@ adapter, and a DREAL linear adapter for 2023.
 It also has the official Biarritz geographic frame, tested point and line
 classification primitives, reconciliation and continuity views, a dated
 OpenStreetMap matchability probe, and a working deterministic audit runner. It
-does not yet have adapters for the other source generations. The current
+does not yet have adapters for the other source generations. A local-only
+Next.js/MapLibre evidence explorer and deterministic visualization exporter are
+implemented, but they have not yet received operator build or browser
+verification. The current
 machine recommendation is provisional because three catalogue sources remain
 blocked and neither target avenue has an exact, plausible road match.
 
@@ -29,7 +33,9 @@ blocked and neither target avenue has an exact, plausible road match.
 | OSM matchability probe | Implemented and verified | A content-addressed Overpass acquisition records query bounds, checksum, OSM base time, and ODbL evidence and rejects partial responses carrying runtime remarks. Parsing retains supported non-degenerate motor-road ways. A snapshot-scoped result envelope and matching implement the accepted search radii, evidence weights, hard reference rejection, full-precision thresholds, and deterministic ordering. A dated local Biarritz probe is recorded below. |
 | Audit summary, runner, and CLI | Partly implemented and verified | The runner orchestrates the official boundary, supported source adapters, geographic scope, in-scope continuity and reconciliation, and the dated OSM probe. `traffic:audit --as-of YYYY-MM-DD` writes deterministic summary JSON. `traffic:inspect` remains operational; `traffic:register` and `traffic:verify` remain unimplemented. |
 | Machine summary and human report | Partly implemented and verified | A gitignored machine summary was generated twice from the live sources with byte-identical output. The English human report remains pending and will not be generated until its claims can be reviewed against the summary and open blockers. |
-| Web application and database | Deferred | Phase 1 does not scaffold Next.js, run a server, or create a database. |
+| Visualization bundle | Implemented and statically verified | `traffic:visualize` combines the audit snapshot with IGN BD TOPO reference streets. Two live runs were byte-identical. The gitignored bundle contains 2,603 named street subjects, 7 station groups, 12 clipped linear records, both pending target corridors, and zero traffic-to-street assignments. |
+| Local web application | Implemented; runtime verification pending | A French Next.js/MapLibre interface provides overview and year controls, complete named-street search, optional uncertain linear evidence, station history, provenance, and same-location comparison. Unit and component tests pass. Operator build and built-in-browser checks remain pending. |
+| Database and public release | Deferred | No database, deployment, publication, or production road identity exists. Local evidence is refused in production runtime. |
 
 ## Fresh verification
 
@@ -37,8 +43,8 @@ The following checks passed on 2026-08-30:
 
 ```text
 pnpm test
-Test Files  23 passed (23)
-Tests       185 passed (185)
+Test Files  34 passed (34)
+Tests       226 passed (226)
 
 pnpm typecheck
 Exit code 0
@@ -70,6 +76,15 @@ conflicts, distance exclusion, deterministic pairs, duplicate station IDs, and
 unknown counter types.
 They do not verify adapters for the three unsupported DREAL source generations.
 
+Visualization tests cover IGN WFS pagination and deterministic acquisition,
+connected named-street subjects, exact Verdun and Gare corridor extraction,
+bundle invariants, source links, coordinate validity, the interpolation ban,
+linear clipping, deterministic serialization, local-only loading, fixed map
+source/layer order, hover and selection state, overview and layer controls,
+French detail views, accessibility labels, provenance, and same-location
+comparison including a zero baseline. This is source and simulated-component
+evidence, not a successful Next.js build or browser result.
+
 OSM tests cover bounded POST acquisition, content-addressed provenance,
 snapshot validation, HTML and HTTP error rejection, supported motor-road
 parsing, reference normalization, invalid geometry, duplicate ways, weighted
@@ -78,6 +93,28 @@ threshold and runner-up rules, deterministic ties, missing evidence, ambiguous
 results, unmatched results, partial Overpass responses, degenerate geometry,
 full-precision threshold decisions, literal radius staging, and snapshot-scoped
 result envelopes.
+
+## Local visualization prototype
+
+`pnpm traffic:visualize --as-of 2026-08-29` completed twice on 2026-08-30
+with byte-identical output. The gitignored bundle SHA-256 is
+`fc9f63f15776bf9a976f38df3ce829f43f3393577e76076bb4443d25f8051902`.
+Its IGN BD TOPO artifact SHA-256 is
+`a459dbddf031ea28a2a527ca279725ea5f2e75a5ee5bfb74a457077a9a41af48`.
+
+The bundle contains 2,603 named street subjects, 7 station groups, and 12
+linear records clipped to the display buffer. It extracts one connected street
+subject for Avenue de Verdun and one for Avenue de la Gare. Both target
+corridors remain `pending` operator geometry review. There are zero accepted or
+candidate traffic-to-street assignments, so neither target displays a traffic
+series or comparison. These counts describe this dated local bundle, not a
+production road network or citywide traffic total.
+
+The application implementation uses those local streets as interaction
+geometry and OSM only as the dated station-matchability probe. It does not turn
+an ambiguous OSM result, a matching name, or proximity into assigned traffic.
+`pnpm build`, `pnpm dev`, and focused desktop/mobile browser verification remain
+operator and runtime gates.
 
 A live boundary check against the official endpoint also passed on 2026-08-29.
 The response was an 8-member MultiPolygon, occupied 8,261 bytes, and produced a

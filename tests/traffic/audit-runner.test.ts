@@ -11,8 +11,11 @@ import type {
 import {
   createDefaultAuditRunner,
   TrafficAuditRunner,
-  type AuditRunnerDependencies,
 } from "../../src/traffic/audit-runner.js";
+import {
+  TrafficAuditEvidenceCollector,
+  type AuditEvidenceDependencies,
+} from "../../src/traffic/audit-evidence.js";
 
 const temporaryDirectories: string[] = [];
 
@@ -123,7 +126,7 @@ const evidence: GeographicEvidence[] = [
   },
 ];
 
-function dependencies(reverse: boolean): AuditRunnerDependencies {
+function dependencies(reverse: boolean): AuditEvidenceDependencies {
   return {
     loadBoundary: async () => structuredClone(boundary),
     loadSources: async () => ({
@@ -154,6 +157,12 @@ function dependencies(reverse: boolean): AuditRunnerDependencies {
   };
 }
 
+function runner(reverse: boolean): TrafficAuditRunner {
+  return new TrafficAuditRunner(
+    new TrafficAuditEvidenceCollector(dependencies(reverse)),
+  );
+}
+
 describe("traffic audit runner", () => {
   test("writes a deterministic summary from derived continuity, reconciliation, and OSM results", async () => {
     const firstOutputDirectory = await temporaryDirectory();
@@ -166,8 +175,8 @@ describe("traffic audit runner", () => {
       bufferKilometers: 2 as const,
     };
 
-    const first = await new TrafficAuditRunner(dependencies(false)).run(config);
-    const second = await new TrafficAuditRunner(dependencies(true)).run({
+    const first = await runner(false).run(config);
+    const second = await runner(true).run({
       ...config,
       outputDirectory: secondOutputDirectory,
     });
@@ -198,10 +207,10 @@ describe("traffic audit runner", () => {
   });
 
   test("rejects an audit configuration outside the approved Biarritz frame", async () => {
-    const runner = new TrafficAuditRunner(dependencies(false));
+    const auditRunner = runner(false);
 
     await expect(
-      runner.run({
+      auditRunner.run({
         asOf: "2026-08-29",
         cacheDirectory: await temporaryDirectory(),
         outputDirectory: await temporaryDirectory(),

@@ -8,7 +8,9 @@ Code and documentation use these terms consistently.
 The original application brief defines the long-term product vision. The
 approved Biarritz traffic data discovery plan is the binding contract for Phase
 1. If they differ, the Phase 1 plan governs current implementation until the
-audit is complete and the operator approves the next phase.
+audit is complete and the operator approves the next phase. D-017 is the
+approved exception for a local-only visualization aid; it does not relax the
+evidence, licensing, assignment, deployment, or publication gates.
 
 ## Domain vocabulary
 
@@ -48,6 +50,21 @@ audit is complete and the operator approves the next phase.
   a production road ID and does not mutate the station or its observations.
 - **Audit summary**: the deterministic machine-readable result from which the
   human audit report will be generated.
+- **Visualization bundle**: a deterministic, versioned, gitignored view model
+  derived from the audit evidence snapshot and IGN reference geometry. It
+  contains only canonical point observations, display-clipped linear evidence,
+  source links, explicit assignments, and public-safe provenance. Acquisition
+  timestamps do not affect its analytical bytes.
+- **Street subject**: one connected set of named IGN BD TOPO segments grouped
+  by an approved normalized street name. It is a local interaction identity,
+  not a permanent road ID and not evidence that traffic belongs to the street.
+- **Target corridor**: the explicit local overlay for Avenue de Verdun or
+  Avenue de la Gare, composed from matching street subjects and pending operator
+  geometry review. It remains distinct from a traffic assignment.
+- **Street traffic assignment**: an explicit derived link between one street
+  subject and one station group. `candidate-review` may be displayed as an
+  uncertainty but never as assigned traffic; only `accepted` can expose the
+  station series on the street.
 - **Traffic count**: a vehicle volume tied to a counter or an explicitly modeled
   volume. Route duration, speed, congestion class, and navigation-probe sample
   size are not traffic counts.
@@ -115,12 +132,16 @@ test, a completed audit, and a deployed product are different kinds of evidence.
   trial, payment method, or account creation.
 - Do not place raw downloads, unclear-licence data, credentials, or cache
   artifacts in Git.
+- Keep street reference geometry, station evidence, and traffic assignment as
+  separate layers. Never infer an assignment from name or proximity alone.
+- Refuse the local visualization bundle in a production runtime until data
+  release rights and publication criteria receive separate approval.
 
 ## Operating boundaries
 
-Package installation, server startup, database changes, Git staging and
-commits, deployment, and publication remain operator-controlled. Phase 1 does
-not start a web server or mutate a database.
+Package installation, builds, server startup, database changes, Git staging and
+commits, deployment, and publication remain operator-controlled. The approved
+local visualization exception does not start a server or mutate a database.
 
 Code, domain identifiers, tests, prompts, and repository documentation use
 English. The eventual product interface uses French. Official names and
@@ -130,9 +151,8 @@ acronyms remain in their recognized form when translation would reduce clarity.
 
 The following are outside Phase 1:
 
-- Next.js and React application scaffolding;
 - PostgreSQL/PostGIS or Supabase;
-- MapLibre and the production map;
+- deployment, public hosting, and a production map architecture;
 - Google Maps, TomTom, HERE, or another commercial provider integration;
 - permanent internal road-segment IDs;
 - production map matching;

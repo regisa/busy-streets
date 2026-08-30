@@ -12,11 +12,17 @@ import {
   serializeSourceInspection,
 } from "../../src/traffic/inspection.js";
 import {
+  createDefaultAuditEvidenceCollector,
   createDefaultAuditRunner,
 } from "../../src/traffic/audit-runner.js";
 import type { AuditRunner } from "../../src/traffic/contracts.js";
 import { findTrafficSource } from "../../src/traffic/source-catalog.js";
 import { acquireWfsSample, acquireWfsSchema } from "../../src/traffic/wfs.js";
+import { acquireIgnRoads } from "../../src/traffic/ign-roads.js";
+import {
+  DefaultVisualizationExporter,
+  type VisualizationExporter,
+} from "../../src/visualization/exporter.js";
 
 export interface TrafficCliDependencies {
   readonly fetch: typeof globalThis.fetch;
@@ -24,6 +30,47 @@ export interface TrafficCliDependencies {
   readonly stdout: (message: string) => void;
   readonly stderr: (message: string) => void;
   readonly auditRunner?: AuditRunner;
+  readonly visualizationExporter?: VisualizationExporter;
+}
+
+async function runVisualize(
+  args: readonly string[],
+  dependencies: TrafficCliDependencies,
+): Promise<number> {
+  const asOf = option(args, "--as-of");
+  if (!asOf) throw new Error("visualize requires --as-of YYYY-MM-DD");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(asOf)) {
+    throw new Error("visualize --as-of must use YYYY-MM-DD");
+  }
+  const cacheDirectory = resolve(
+    option(args, "--cache-dir") ?? ".cache/traffic",
+  );
+  const outputDirectory = resolve(
+    option(args, "--output-dir") ?? "artifacts/traffic/visualization",
+  );
+  const exporter =
+    dependencies.visualizationExporter ??
+    new DefaultVisualizationExporter(
+      createDefaultAuditEvidenceCollector({
+        fetch: dependencies.fetch,
+        now: dependencies.now,
+      }),
+      (options) =>
+        acquireIgnRoads({
+          ...options,
+          fetch: dependencies.fetch,
+          now: dependencies.now,
+        }),
+    );
+  await exporter.export({
+    asOf,
+    cacheDirectory,
+    outputDirectory,
+    boundaryInseeCode: "64122",
+    bufferKilometers: 2,
+  });
+  dependencies.stdout(`Wrote ${join(outputDirectory, "biarritz.json")}`);
+  return 0;
 }
 
 function option(args: readonly string[], name: string): string | null {
@@ -156,6 +203,9 @@ export async function runTrafficCli(
     }
     if (command === "audit") {
       return await runAudit(commandArgs, dependencies);
+    }
+    if (command === "visualize") {
+      return await runVisualize(commandArgs, dependencies);
     }
     throw new Error(`Unsupported traffic command: ${command ?? "none"}`);
   } catch (error) {

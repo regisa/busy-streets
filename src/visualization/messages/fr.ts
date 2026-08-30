@@ -1,0 +1,17 @@
+export const fr = {
+  appTitle: "Trafic routier à Biarritz",
+  overview: "Vue d'ensemble",
+  layers: "Couches",
+  compare: "Comparer",
+  measured: "Mesuré",
+  modeled: "Modélisé",
+  interpolated: "Interpolé",
+  unknownQuality: "Qualité indéterminée",
+  noData: "Aucune donnée",
+  comparisonUnavailable: "Comparaison indisponible",
+  candidateReview: "Correspondance à vérifier",
+  dataAvailable: "Données disponibles",
+  invalidData: "Les données locales ne peuvent pas être chargées",
+  missingData: "Générez d'abord les données locales de visualisation.",
+  disabledData: "Les données locales sont désactivées hors développement.",
+} as const;
