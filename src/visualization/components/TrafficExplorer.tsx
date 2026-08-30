@@ -6,44 +6,101 @@ import { useCallback, useMemo, useState } from "react";
 import type { VisualizationBundle } from "../contracts";
 import type { MapSelection } from "../map/map-controller";
 import { fr } from "../messages/fr";
-import { selectAvailableYears, selectStreetSearchOptions } from "../selectors";
-import { LayerControls } from "./LayerControls";
-import { StreetSearch } from "./StreetSearch";
+import { selectAvailableYears } from "../selectors";
+import { selectStreetComparisonMatrix } from "../street-comparison";
+import {
+  findStreetGroupForSelection,
+  selectDefaultStreetGroupIds,
+  selectStreetGroups,
+} from "../street-groups";
 import { BottomSheet } from "./BottomSheet";
+import { LayerControls } from "./LayerControls";
+import { StreetComparisonSheet } from "./StreetComparisonSheet";
+import { StreetSearch } from "./StreetSearch";
 
 const MapCanvas = dynamic(
   () => import("./MapCanvas").then((module) => module.MapCanvas),
   { ssr: false },
 );
 
+const MAXIMUM_SELECTED_STREETS = 10;
+
 export function TrafficExplorer({
   bundle,
-  onSelectionChange,
 }: Readonly<{
   bundle: VisualizationBundle;
-  onSelectionChange?: (selection: MapSelection) => void;
 }>) {
   const [year, setYear] = useState<number | "overview">("overview");
   const [linearTrafficVisible, setLinearTrafficVisible] = useState(false);
-  const [selection, setSelection] = useState<MapSelection | null>(null);
+  const [focusedSelection, setFocusedSelection] =
+    useState<MapSelection | null>(null);
+  const [comparisonCollapsed, setComparisonCollapsed] = useState(false);
   const years = useMemo(() => selectAvailableYears(bundle), [bundle]);
-  const searchOptions = useMemo(() => selectStreetSearchOptions(bundle), [bundle]);
-  const select = useCallback(
-    (nextSelection: MapSelection) => {
-      setSelection(nextSelection);
-      onSelectionChange?.(nextSelection);
+  const streetGroups = useMemo(() => selectStreetGroups(bundle), [bundle]);
+  const [selectedStreetGroupIds, setSelectedStreetGroupIds] = useState<
+    readonly string[]
+  >(() => selectDefaultStreetGroupIds(streetGroups));
+  const selectedStreetGroups = selectedStreetGroupIds.flatMap((id) => {
+    const group = streetGroups.find((candidate) => candidate.id === id);
+    return group ? [group] : [];
+  });
+  const selectedStreetSubjectIds = selectedStreetGroups.flatMap(
+    ({ streetSubjectIds }) => streetSubjectIds,
+  );
+  const comparisonMatrix = useMemo(
+    () => selectStreetComparisonMatrix(bundle, selectedStreetGroups),
+    [bundle, selectedStreetGroups],
+  );
+
+  const addStreet = useCallback((groupId: string) => {
+    setSelectedStreetGroupIds((current) =>
+      current.includes(groupId) || current.length >= MAXIMUM_SELECTED_STREETS
+        ? current
+        : [...current, groupId],
+    );
+  }, []);
+
+  const removeStreet = useCallback((groupId: string) => {
+    setSelectedStreetGroupIds((current) =>
+      current.filter((id) => id !== groupId),
+    );
+  }, []);
+
+  const toggleStreet = useCallback((groupId: string) => {
+    setSelectedStreetGroupIds((current) =>
+      current.includes(groupId)
+        ? current.filter((id) => id !== groupId)
+        : current.length < MAXIMUM_SELECTED_STREETS
+          ? [...current, groupId]
+          : current,
+    );
+  }, []);
+
+  const selectFromMap = useCallback(
+    (selection: MapSelection) => {
+      if (selection.kind === "station") {
+        setFocusedSelection(selection);
+        return;
+      }
+      const group = findStreetGroupForSelection(
+        streetGroups,
+        bundle,
+        selection,
+      );
+      if (group) toggleStreet(group.id);
     },
-    [onSelectionChange],
+    [bundle, streetGroups, toggleStreet],
   );
 
   return (
     <main className="traffic-explorer">
       <MapCanvas
         bundle={bundle}
-        selection={selection}
+        selectedStreetSubjectIds={selectedStreetSubjectIds}
+        focusedSelection={focusedSelection}
         year={year}
         linearTrafficVisible={linearTrafficVisible}
-        onSelect={select}
+        onSelect={selectFromMap}
       />
       <header className="explorer-header">
         <h1 className="visually-hidden">{fr.appTitle}</h1>
@@ -66,31 +123,36 @@ export function TrafficExplorer({
             </button>
           ))}
         </nav>
-        <StreetSearch options={searchOptions} onSelect={select} />
-        <button
-          type="button"
-          className="compare-button"
-          aria-controls="traffic-detail-sheet"
-          disabled={selection?.kind !== "station"}
-        >
-          {fr.compare}
-        </button>
+        <StreetSearch
+          groups={streetGroups}
+          selectedIds={selectedStreetGroupIds}
+          maximum={MAXIMUM_SELECTED_STREETS}
+          onAdd={addStreet}
+          onRemove={removeStreet}
+        />
         <LayerControls
           linearTrafficVisible={linearTrafficVisible}
           onLinearTrafficVisibleChange={setLinearTrafficVisible}
         />
       </header>
       <p className="selection-summary" aria-live="polite">
-        {selection ? `Sélection : ${selection.id}` : "Aucune sélection"}
+        {fr.selectedStreetCount(selectedStreetGroups.length)}
       </p>
-      {selection ? (
+      {focusedSelection?.kind === "station" ? (
         <div id="traffic-detail-sheet">
           <BottomSheet
             bundle={bundle}
-            selection={selection}
-            onClose={() => setSelection(null)}
+            selection={focusedSelection}
+            onClose={() => setFocusedSelection(null)}
           />
         </div>
+      ) : selectedStreetGroups.length >= 2 ? (
+        <StreetComparisonSheet
+          matrix={comparisonMatrix}
+          selectedCount={selectedStreetGroups.length}
+          collapsed={comparisonCollapsed}
+          onCollapsedChange={setComparisonCollapsed}
+        />
       ) : null}
     </main>
   );

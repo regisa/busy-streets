@@ -150,7 +150,7 @@ describe("MapController", () => {
     expect(bufferLayer?.paint).toMatchObject({ "fill-opacity": 0.18 });
   });
 
-  test("tracks only the current hovered street and emits map selections", () => {
+  test("tracks hover and lets source streets own target-overlay clicks", () => {
     const map = new FakeMap();
     const onSelect = vi.fn();
     const controller = createMapController({ map, bundle: bundle(), onSelect });
@@ -165,19 +165,19 @@ describe("MapController", () => {
 
     map.emit("click", "street-lines", { features: [{ id: "street:verdun" }] });
     map.emit("click", "station-points", { features: [{ id: "station-group:one" }] });
+    map.emit("click", "target-lines", { features: [{ id: "avenue-de-verdun" }] });
     expect(onSelect).toHaveBeenNthCalledWith(1, { kind: "street", id: "street:verdun" });
     expect(onSelect).toHaveBeenNthCalledWith(2, { kind: "station", id: "station-group:one" });
+    expect(onSelect).toHaveBeenCalledTimes(2);
     controller.destroy();
     expect(map.handlerCount()).toBe(0);
   });
 
-  test("controls overview filters, linear visibility, and explicit selection state", () => {
+  test("controls overview filters and linear visibility", () => {
     const map = new FakeMap();
     const controller = createMapController({ map, bundle: bundle(), onSelect: () => undefined });
     controller.setLinearTrafficVisible(true);
     controller.setYear(2024);
-    controller.select({ kind: "street", id: "street:verdun" });
-    controller.select(null);
 
     expect(map.layoutChanges.at(-1)).toEqual({
       layer: "linear-traffic-lines",
@@ -188,11 +188,58 @@ describe("MapController", () => {
       layer: "station-points",
       filter: ["in", 2024, ["get", "years"]],
     });
-    expect(map.featureStates).toContainEqual({
-      target: { source: "streets", id: "street:verdun" },
-      state: { selected: true },
-    });
-    expect(map.featureStates.at(-1)).toEqual({
+  });
+
+  test("updates several selected streets by set difference", () => {
+    const map = new FakeMap();
+    const controller = createMapController({ map, bundle: bundle(), onSelect: () => undefined });
+
+    controller.setStreetSelection(["street:verdun", "street:gare", "street:gare"]);
+    controller.setStreetSelection(["street:gare", "street:other"]);
+
+    expect(map.featureStates).toEqual([
+      {
+        target: { source: "streets", id: "street:verdun" },
+        state: { selected: true },
+      },
+      {
+        target: { source: "streets", id: "street:gare" },
+        state: { selected: true },
+      },
+      {
+        target: { source: "streets", id: "street:verdun" },
+        state: { selected: false },
+      },
+      {
+        target: { source: "streets", id: "street:other" },
+        state: { selected: true },
+      },
+    ]);
+  });
+
+  test("keeps focused station state independent from selected streets", () => {
+    const map = new FakeMap();
+    const controller = createMapController({ map, bundle: bundle(), onSelect: () => undefined });
+
+    controller.setStreetSelection(["street:verdun"]);
+    controller.setFocusedSelection({ kind: "station", id: "station-group:one" });
+    controller.setFocusedSelection(null);
+
+    expect(map.featureStates).toEqual([
+      {
+        target: { source: "streets", id: "street:verdun" },
+        state: { selected: true },
+      },
+      {
+        target: { source: "stations", id: "station-group:one" },
+        state: { selected: true },
+      },
+      {
+        target: { source: "stations", id: "station-group:one" },
+        state: { selected: false },
+      },
+    ]);
+    expect(map.featureStates).not.toContainEqual({
       target: { source: "streets", id: "street:verdun" },
       state: { selected: false },
     });

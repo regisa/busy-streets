@@ -17,7 +17,8 @@ maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 
 export interface MapCanvasProps {
   readonly bundle: VisualizationBundle;
-  readonly selection: MapSelection | null;
+  readonly selectedStreetSubjectIds: readonly string[];
+  readonly focusedSelection: MapSelection | null;
   readonly year: number | "overview";
   readonly linearTrafficVisible: boolean;
   readonly onSelect: (selection: MapSelection) => void;
@@ -25,7 +26,8 @@ export interface MapCanvasProps {
 
 export function MapCanvas({
   bundle,
-  selection,
+  selectedStreetSubjectIds,
+  focusedSelection,
   year,
   linearTrafficVisible,
   onSelect,
@@ -78,7 +80,8 @@ export function MapCanvas({
         controllerRef.current = controller;
         controller.setYear(year);
         controller.setLinearTrafficVisible(linearTrafficVisible);
-        controller.select(selection);
+        controller.setStreetSelection(selectedStreetSubjectIds);
+        controller.setFocusedSelection(focusedSelection);
       };
       map.on("load", handleLoad);
     };
@@ -98,7 +101,14 @@ export function MapCanvas({
     () => controllerRef.current?.setLinearTrafficVisible(linearTrafficVisible),
     [linearTrafficVisible],
   );
-  useEffect(() => controllerRef.current?.select(selection), [selection]);
+  useEffect(
+    () => controllerRef.current?.setStreetSelection(selectedStreetSubjectIds),
+    [selectedStreetSubjectIds],
+  );
+  useEffect(
+    () => controllerRef.current?.setFocusedSelection(focusedSelection),
+    [focusedSelection],
+  );
 
   return <div ref={containerRef} className="map-canvas" aria-label="Carte de Biarritz" />;
 }

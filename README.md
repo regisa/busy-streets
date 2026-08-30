@@ -35,8 +35,12 @@ is still unsupported.
 The local prototype opens in a French overview, exposes the complete named IGN
 BD TOPO street network for Biarritz and its 2 km buffer, and lets the operator
 inspect station histories, provenance, quality, and valid same-location year
-comparisons. Avenue de Verdun and Avenue de la Gare are visible priority
-corridors, but both deliberately show that comparison data is unavailable.
+comparisons. A fuzzy autocomplete selects up to ten grouped street names and
+updates an automatic year matrix. Avenue de Verdun, Avenue de la Marne, and
+Avenue de la Gare are selected initially. Streets without accepted assignments
+remain visible as `Aucune donnée`; independent counters stay in separate rows.
+Avenue de Verdun and Avenue de la Gare remain priority corridors whose required
+historical comparison is not yet supported by current evidence.
 
 Sparse coverage is an acceptable result. The project will not fill gaps or
 present estimates as measurements to make the map look complete.

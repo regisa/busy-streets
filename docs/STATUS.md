@@ -3,7 +3,7 @@
 - As of: 2026-08-30
 - Phase: 1, data discovery
 - Current machine-audit recommendation: limited corridor or station explorer
-- Local visualization: implemented and browser-verified; final operator rebuild pending
+- Local visualization: multi-street comparison implemented, browser-verified, and production-built
 
 Busy Streets has a tested source catalogue, artifact acquisition path, schema
 inspector, DREAL point adapters for 2019-2023 and 2024, a CD64 latest-count point
@@ -13,10 +13,9 @@ classification primitives, reconciliation and continuity views, a dated
 OpenStreetMap matchability probe, and a working deterministic audit runner. It
 does not yet have adapters for the other source generations. A local-only
 Next.js/MapLibre evidence explorer and deterministic visualization exporter are
-implemented. An operator build completed successfully, and focused desktop and
-mobile browser verification then found and resolved the MapLibre 6 worker and
-viewport integration defects. A final operator rebuild after those fixes remains
-pending. The current
+implemented. After focused desktop and mobile browser verification resolved the
+MapLibre 6 worker and viewport integration defects, the operator completed the
+final production build. The current
 machine recommendation is provisional because three catalogue sources remain
 blocked and neither target avenue has an exact, plausible road match.
 
@@ -36,7 +35,7 @@ blocked and neither target avenue has an exact, plausible road match.
 | Audit summary, runner, and CLI | Partly implemented and verified | The runner orchestrates the official boundary, supported source adapters, geographic scope, in-scope continuity and reconciliation, and the dated OSM probe. `traffic:audit --as-of YYYY-MM-DD` writes deterministic summary JSON. `traffic:inspect` remains operational; `traffic:register` and `traffic:verify` remain unimplemented. |
 | Machine summary and human report | Partly implemented and verified | A gitignored machine summary was generated twice from the live sources with byte-identical output. The English human report remains pending and will not be generated until its claims can be reviewed against the summary and open blockers. |
 | Visualization bundle | Implemented and statically verified | `traffic:visualize` combines the audit snapshot with IGN BD TOPO reference streets. Two live runs were byte-identical. The gitignored bundle contains 2,603 named street subjects, 7 station groups, 12 clipped linear records, both pending target corridors, and zero traffic-to-street assignments. |
-| Local web application | Implemented and browser-verified; final rebuild pending | A French Next.js/MapLibre interface provides an attributed OpenFreeMap Positron OSM-derived contextual basemap, IGN evidence geometry, overview and year controls, complete named-street search, optional uncertain linear evidence, station history, provenance, and same-location comparison. Desktop and 390 × 844 mobile checks passed with no console warnings or errors. The current source still needs one operator `pnpm build` after the runtime fixes and basemap change. |
+| Local web application | Implemented and verified locally | A French Next.js/MapLibre interface provides an attributed OpenFreeMap Positron OSM-derived contextual basemap, IGN evidence geometry, overview and year controls, fuzzy grouped-street selection for up to ten streets, an accepted-only automatic year matrix, optional uncertain linear evidence, station history, provenance, and same-location comparison. Focused desktop and 390 × 844 checks cover the new autocomplete and comparison layout, and the operator completed the final `pnpm build`. |
 | Database and public release | Deferred | No database, deployment, publication, or production road identity exists. Local evidence is refused in production runtime. |
 
 ## Fresh verification
@@ -45,17 +44,16 @@ The following checks passed on 2026-08-30:
 
 ```text
 pnpm test
-Test Files  34 passed (34)
-Tests       230 passed (230)
+Test Files  38 passed (38)
+Tests       255 passed (255)
 
 pnpm typecheck
 Exit code 0
 ```
 
-The operator also ran `pnpm build` successfully with Next.js 16.3.3 and
-Turbopack: compilation, TypeScript checking, static page generation, and final
-optimization completed. That run preceded the browser-discovered MapLibre
-worker and viewport fixes, so a final build rerun remains an explicit gate.
+The operator ran `pnpm build` successfully with Next.js 16.3.3 and Turbopack,
+then confirmed the final build rerun on 2026-08-30 after the browser-discovered
+MapLibre worker and viewport fixes and the multi-street implementation.
 
 Focused verification against the operator-run `pnpm dev` instance at
 `http://localhost:3000/` then confirmed:
@@ -115,10 +113,22 @@ Visualization tests cover IGN WFS pagination and deterministic acquisition,
 connected named-street subjects, exact Verdun and Gare corridor extraction,
 bundle invariants, source links, coordinate validity, the interpolation ban,
 linear clipping, deterministic serialization, local-only loading, fixed map
-source/layer order, hover and selection state, overview and layer controls,
-French detail views, accessibility labels, provenance, and same-location
-comparison including a zero baseline. This automated evidence is supplemented
-by the focused live browser checks above.
+source/layer order, hover and multi-street selection state, normalized-name
+grouping, fuzzy search and aliases, the ten-street cap, accepted-only comparison
+rows, explicit no-data cells, independent counter rows, overview and layer
+controls, French detail views, accessibility labels, provenance, and
+same-location comparison including a zero baseline. The earlier browser checks
+above were supplemented on 2026-08-30 by a focused multi-street pass against the
+operator-run development server. It confirmed the three default streets,
+explicit no-data rows, `gare du midi` fuzzy alias, keyboard selection, persistent
+collapsed state through selection changes, mouse selection, and restoration of
+the default state. Opening and closing a station detail preserved the street
+selection and restored the comparison sheet.
+At 390 × 844, chips wrapped across rows, autocomplete results stayed within the
+viewport, the page had no horizontal overflow, and the comparison matrix
+scrolled within its own wrapper. The desktop viewport was restored after the
+check. Map click interaction remains covered by the automated controller and
+component tests rather than this focused pass.
 
 OSM tests cover bounded POST acquisition, content-addressed provenance,
 snapshot validation, HTML and HTTP error rejection, supported motor-road
@@ -148,9 +158,8 @@ production road network or citywide traffic total.
 The application implementation uses those local streets as interaction
 geometry and OSM only as the dated station-matchability probe. It does not turn
 an ambiguous OSM result, a matching name, or proximity into assigned traffic.
-The development runtime and focused desktop/mobile browser checks pass. A final
-operator `pnpm build` after the MapLibre integration fixes remains the only web
-runtime verification gate.
+The development runtime, focused desktop/mobile browser checks, and final
+operator-controlled production build pass.
 
 A live boundary check against the official endpoint also passed on 2026-08-29.
 The response was an 8-member MultiPolygon, occupied 8,261 bytes, and produced a

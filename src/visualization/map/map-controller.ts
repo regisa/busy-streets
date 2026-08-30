@@ -23,7 +23,8 @@ export type MapSelection =
 export interface MapController {
   setYear(year: number | "overview"): void;
   setLinearTrafficVisible(visible: boolean): void;
-  select(selection: MapSelection | null): void;
+  setStreetSelection(streetSubjectIds: readonly string[]): void;
+  setFocusedSelection(selection: MapSelection | null): void;
   destroy(): void;
 }
 
@@ -105,7 +106,8 @@ export function createMapController(options: {
 
   const removers: Array<() => void> = [];
   let hoveredStreetId: string | null = null;
-  let selected: MapSelection | null = null;
+  let selectedStreetIds = new Set<string>();
+  let focusedSelection: MapSelection | null = null;
 
   const listen = (
     type: string,
@@ -144,11 +146,6 @@ export function createMapController(options: {
     const id = readFeatureId(event);
     if (id) onSelect({ kind: "station", id });
   });
-  listen("click", "target-lines", (event) => {
-    const id = readFeatureId(event);
-    if (id) onSelect({ kind: "target", id });
-  });
-
   return {
     setYear(year) {
       const filter =
@@ -166,13 +163,27 @@ export function createMapController(options: {
         visible ? "visible" : "none",
       );
     },
-    select(nextSelection) {
-      if (selected) {
-        map.setFeatureState(featureTarget(selected), { selected: false });
+    setStreetSelection(streetSubjectIds) {
+      const nextStreetIds = new Set(streetSubjectIds);
+      for (const id of selectedStreetIds) {
+        if (!nextStreetIds.has(id)) {
+          map.setFeatureState({ source: "streets", id }, { selected: false });
+        }
       }
-      selected = nextSelection;
-      if (selected) {
-        map.setFeatureState(featureTarget(selected), { selected: true });
+      for (const id of nextStreetIds) {
+        if (!selectedStreetIds.has(id)) {
+          map.setFeatureState({ source: "streets", id }, { selected: true });
+        }
+      }
+      selectedStreetIds = nextStreetIds;
+    },
+    setFocusedSelection(nextSelection) {
+      if (focusedSelection) {
+        map.setFeatureState(featureTarget(focusedSelection), { selected: false });
+      }
+      focusedSelection = nextSelection;
+      if (focusedSelection) {
+        map.setFeatureState(featureTarget(focusedSelection), { selected: true });
       }
     },
     destroy() {
@@ -182,6 +193,14 @@ export function createMapController(options: {
           { hovered: false },
         );
         hoveredStreetId = null;
+      }
+      for (const id of selectedStreetIds) {
+        map.setFeatureState({ source: "streets", id }, { selected: false });
+      }
+      selectedStreetIds = new Set();
+      if (focusedSelection) {
+        map.setFeatureState(featureTarget(focusedSelection), { selected: false });
+        focusedSelection = null;
       }
       for (const remove of removers.splice(0)) remove();
     },

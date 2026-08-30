@@ -379,3 +379,26 @@ retains the provider, OpenMapTiles, OpenStreetMap, and IGN attribution supplied
 by the style and application. The service has no SLA and is approved only for
 normal local POC viewing. A public release still requires a fresh provider,
 capacity, privacy, licence, attribution, caching, and cost review.
+
+## D-020: Compare a grouped multi-street selection without aggregating evidence
+
+- Status: Accepted
+- Accepted: 2026-08-30
+
+The local prototype groups disconnected IGN street subjects that share one
+normalized street name into one interaction choice while retaining every source
+subject ID. A dependency-free fuzzy autocomplete selects at most ten streets.
+It starts with Avenue de Verdun, Avenue de la Marne, and Avenue de la Gare;
+`gare du midi` is a search alias for the official Avenue de la Gare name.
+
+Two or more selected streets open a comparison matrix automatically. The
+matrix uses accepted traffic-to-street assignments only. Streets without an
+accepted assignment remain visible as `Aucune donnée`. Several independent
+station groups assigned to one street remain separate attributable rows and are
+never added or averaged into a street total. Collapsing the matrix preserves
+selection, and station details may open without clearing it.
+
+The source street layer owns map clicks beneath the priority overlay so one
+pointer action cannot toggle a street twice. Candidate-review assignments and
+target-corridor status remain visible evidence states but never supply traffic
+values.
