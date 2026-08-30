@@ -46,7 +46,7 @@ export function TrafficExplorer({
         onSelect={select}
       />
       <header className="explorer-header">
-        <h1>{fr.appTitle}</h1>
+        <h1 className="visually-hidden">{fr.appTitle}</h1>
         <nav className="year-navigation" aria-label="Période affichée">
           <button
             type="button"
@@ -69,6 +69,7 @@ export function TrafficExplorer({
         <StreetSearch options={searchOptions} onSelect={select} />
         <button
           type="button"
+          className="compare-button"
           aria-controls="traffic-detail-sheet"
           disabled={selection?.kind !== "station"}
         >

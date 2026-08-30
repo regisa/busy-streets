@@ -1,5 +1,20 @@
 import type { VisualizationBundle } from "../contracts";
 
+export const OPENFREEMAP_POSITRON_STYLE_URL =
+  "https://tiles.openfreemap.org/styles/positron";
+
+interface BaseMapStyle {
+  readonly version: 8;
+  readonly sources: Readonly<Record<string, unknown>>;
+  readonly layers: readonly BaseMapLayer[];
+  readonly [key: string]: unknown;
+}
+
+interface BaseMapLayer {
+  readonly id: string;
+  readonly [key: string]: unknown;
+}
+
 export type MapSelection =
   | { readonly kind: "street"; readonly id: string }
   | { readonly kind: "station"; readonly id: string }
@@ -32,6 +47,50 @@ export interface MapAdapter {
     layer: string,
     handler: (event: MapEventLike) => void,
   ): void;
+}
+
+export function createBaseMapStyle(): BaseMapStyle {
+  return {
+    version: 8 as const,
+    sources: {},
+    layers: [
+      {
+        id: "neutral-background",
+        type: "background" as const,
+        paint: { "background-color": "#bdd1d3" },
+      },
+    ],
+  };
+}
+
+export async function loadBaseMapStyle(
+  fetchStyle: () => Promise<unknown>,
+): Promise<BaseMapStyle> {
+  try {
+    const style = await fetchStyle();
+    if (isBaseMapStyle(style)) return style;
+  } catch {
+    // The local evidence layers remain usable on the neutral fallback.
+  }
+  return createBaseMapStyle();
+}
+
+function isBaseMapStyle(value: unknown): value is BaseMapStyle {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<BaseMapStyle>;
+  return (
+    candidate.version === 8 &&
+    !!candidate.sources &&
+    typeof candidate.sources === "object" &&
+    !Array.isArray(candidate.sources) &&
+    Array.isArray(candidate.layers) &&
+    candidate.layers.every(
+      (layer) =>
+        !!layer &&
+        typeof layer === "object" &&
+        typeof (layer as Partial<BaseMapLayer>).id === "string",
+    )
+  );
 }
 
 export function createMapController(options: {
@@ -216,7 +275,7 @@ function addLayers(map: MapAdapter): void {
     id: "buffer-fill",
     type: "fill",
     source: "buffer",
-    paint: { "fill-color": "#efeadf", "fill-opacity": 0.72 },
+    paint: { "fill-color": "#efeadf", "fill-opacity": 0.18 },
   });
   map.addLayer({
     id: "boundary-line",

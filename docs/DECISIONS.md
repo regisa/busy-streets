@@ -333,10 +333,49 @@ interaction. Avenue de Verdun and Avenue de la Gare are extracted as explicit
 **target corridors** and remain pending operator geometry review. These
 identities are prototypes, not permanent road IDs.
 
-The map uses a neutral local background. OpenStreetMap remains the dated
-station-matchability probe and is not replaced by IGN. Traffic is assigned to a
+The original map used a neutral local background. That background-only choice
+is superseded by D-018. OpenStreetMap remains the dated station-matchability
+probe and is not replaced by IGN. Traffic is assigned to a
 street only through an explicit accepted assignment. Name equality, proximity,
 an ambiguous OSM match, or a candidate-review assignment never displays a
 station value as street traffic. The generated visualization bundle and source
 artifacts remain gitignored, and the loader refuses local evidence in a
 production runtime until release rights receive separate approval.
+
+## D-018: Use OSM raster tiles as local prototype context
+
+- Status: Superseded by D-019
+- Accepted: 2026-08-30
+
+The local prototype uses the standard OpenStreetMap raster tile service as a
+contextual basemap beneath IGN reference streets and traffic evidence. The
+neutral background remains underneath the raster layer so local evidence still
+has a usable canvas when tiles are unavailable. The municipality buffer uses a
+light translucent tint rather than obscuring the basemap.
+
+The map displays linked `© OpenStreetMap contributors` attribution alongside
+the IGN attribution. In accordance with the
+[OSMF tile usage policy](https://operations.osmfoundation.org/policies/tiles/),
+this local POC performs only normal interactive tile viewing in a browser: it
+does not prefetch, scrape, proxy, or offer offline tiles. The standard community
+tile service is best-effort and is not selected as the provider for a public
+release. Publication requires a fresh provider, capacity, caching, privacy,
+licence, attribution, and cost decision.
+
+## D-019: Use OpenFreeMap Positron as local prototype context
+
+- Status: Accepted
+- Accepted: 2026-08-30
+
+The local prototype uses OpenFreeMap's OSM-derived Positron vector style as a
+quieter contextual basemap beneath IGN reference streets and traffic evidence.
+The style is fetched and validated before MapLibre starts. A neutral local
+style remains the fallback when the request fails or returns malformed data, so
+the evidence layers keep a usable canvas.
+
+At the date of this decision, OpenFreeMap documents its public instance as
+requiring no registration, API key, cookies, or stated request limit. The map
+retains the provider, OpenMapTiles, OpenStreetMap, and IGN attribution supplied
+by the style and application. The service has no SLA and is approved only for
+normal local POC viewing. A public release still requires a fresh provider,
+capacity, privacy, licence, attribution, caching, and cost review.

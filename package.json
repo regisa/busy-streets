@@ -12,6 +12,8 @@
     "build": "next build",
     "check": "pnpm typecheck && pnpm test",
     "dev": "next dev",
+    "prebuild": "node ./scripts/copy-maplibre-worker.mjs",
+    "predev": "node ./scripts/copy-maplibre-worker.mjs",
     "test": "vitest run",
     "test:ui": "vitest run --environment jsdom tests/visualization/components",
     "test:watch": "vitest",

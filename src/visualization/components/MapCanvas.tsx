@@ -6,10 +6,14 @@ import { useEffect, useRef } from "react";
 import type { VisualizationBundle } from "../contracts";
 import {
   createMapController,
+  loadBaseMapStyle,
+  OPENFREEMAP_POSITRON_STYLE_URL,
   type MapAdapter,
   type MapController,
   type MapSelection,
 } from "../map/map-controller";
+
+maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 
 export interface MapCanvasProps {
   readonly bundle: VisualizationBundle;
@@ -32,45 +36,60 @@ export function MapCanvas({
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const map = new maplibregl.Map({
-      container,
-      center: [-1.5586, 43.4832],
-      zoom: 13,
-      attributionControl: false,
-      style: {
-        version: 8,
-        sources: {},
-        layers: [
-          {
-            id: "neutral-background",
-            type: "background",
-            paint: { "background-color": "#bdd1d3" },
-          },
-        ],
-      },
-    });
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
-    map.addControl(
-      new maplibregl.AttributionControl({ compact: true, customAttribution: "Données routières : IGN" }),
-      "bottom-left",
-    );
-    const handleLoad = () => {
-      const controller = createMapController({
-        map: map as unknown as MapAdapter,
-        bundle,
-        onSelect,
+    let cancelled = false;
+    let map: maplibregl.Map | null = null;
+    let handleLoad: (() => void) | null = null;
+
+    const startMap = async () => {
+      const style = await loadBaseMapStyle(async () => {
+        const response = await fetch(OPENFREEMAP_POSITRON_STYLE_URL);
+        if (!response.ok) {
+          throw new Error(`Basemap request failed with ${response.status}`);
+        }
+        return response.json() as Promise<unknown>;
       });
-      controllerRef.current = controller;
-      controller.setYear(year);
-      controller.setLinearTrafficVisible(linearTrafficVisible);
-      controller.select(selection);
+      if (cancelled) return;
+
+      map = new maplibregl.Map({
+        container,
+        center: [-1.5586, 43.4832],
+        zoom: 13,
+        attributionControl: false,
+        style: style as maplibregl.StyleSpecification,
+      });
+      map.addControl(
+        new maplibregl.NavigationControl({ showCompass: false }),
+        "bottom-right",
+      );
+      map.addControl(
+        new maplibregl.AttributionControl({
+          compact: true,
+          customAttribution: "Données routières : IGN",
+        }),
+        "bottom-left",
+      );
+      handleLoad = () => {
+        if (!map) return;
+        const controller = createMapController({
+          map: map as unknown as MapAdapter,
+          bundle,
+          onSelect,
+        });
+        controllerRef.current = controller;
+        controller.setYear(year);
+        controller.setLinearTrafficVisible(linearTrafficVisible);
+        controller.select(selection);
+      };
+      map.on("load", handleLoad);
     };
-    map.on("load", handleLoad);
+    void startMap();
+
     return () => {
-      map.off("load", handleLoad);
+      cancelled = true;
+      if (map && handleLoad) map.off("load", handleLoad);
       controllerRef.current?.destroy();
       controllerRef.current = null;
-      map.remove();
+      map?.remove();
     };
   }, [bundle, onSelect]);
 

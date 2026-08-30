@@ -11,7 +11,8 @@ commercial street-level data, with a strict sample-before-purchase gate.
 The total external data and service budget for the POC is EUR 100 including VAT.
 
 The evidence programme remains in Phase 1: data discovery. A local-only
-Next.js and MapLibre prototype now visualizes the evidence already available;
+Next.js and MapLibre prototype now visualizes the evidence already available
+over an attributed OpenFreeMap Positron OSM-derived contextual basemap;
 it is not a public release, production road network, or claim that the two
 mandatory streets have comparable history. There is no database. The current
 code defines the traffic-data contracts,
@@ -96,6 +97,13 @@ The application reads
 `artifacts/traffic/visualization/biarritz.json` only in development. A
 production runtime refuses local evidence rather than publishing data whose
 release rights have not been approved.
+
+The local POC uses OpenFreeMap's Positron vector style for a quiet map context
+and displays the provider, OpenMapTiles, OpenStreetMap, and IGN attribution. A
+neutral local style keeps the evidence canvas usable if the remote style cannot
+load. The POC does not prefetch or package tiles for offline use. OpenFreeMap's
+public instance has no SLA; a public release must choose and approve its own
+production tile provider rather than assume continued use of the service.
 
 Run the dated Biarritz audit:
 

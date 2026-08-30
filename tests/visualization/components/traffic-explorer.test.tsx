@@ -20,10 +20,13 @@ describe("TrafficExplorer", () => {
   test("opens in overview with search and uncertain linear data hidden", () => {
     render(<TrafficExplorer bundle={visualizationBundleFixture()} />);
 
-    expect(screen.getByRole("heading", { name: fr.appTitle })).toBeVisible();
+    expect(screen.getByRole("heading", { name: fr.appTitle })).toHaveClass(
+      "visually-hidden",
+    );
     expect(screen.getByRole("button", { name: fr.overview })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByLabelText("Afficher les données linéaires 2023")).not.toBeChecked();
     expect(screen.getByRole("combobox", { name: "Rechercher une rue" })).toBeVisible();
+    expect(screen.queryByText("Rechercher une rue")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: fr.compare })).toBeDisabled();
   });
 

@@ -44,6 +44,18 @@ button[aria-pressed="true"] { background: var(--ink); color: var(--paper-raised)
 button:disabled { cursor: not-allowed; opacity: 0.48; }
 :focus-visible { outline: 4px solid var(--evidence-yellow); outline-offset: 3px; }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 h1,
 h2,
 h3 {
@@ -71,7 +83,7 @@ h3 {
   left: 1rem;
   right: 1rem;
   display: grid;
-  grid-template-columns: minmax(15rem, 1fr) auto minmax(15rem, 0.8fr) auto;
+  grid-template-columns: minmax(28rem, 1.4fr) minmax(15rem, 0.8fr) auto;
   gap: 0.65rem;
   align-items: start;
   padding: 0.8rem;
@@ -80,38 +92,31 @@ h3 {
   box-shadow: 5px 5px 0 color-mix(in srgb, var(--ink) 18%, transparent);
 }
 
-.explorer-header h1 {
-  max-width: 18rem;
-  font-size: clamp(1.45rem, 2.4vw, 2.4rem);
-}
-
 .year-navigation {
   display: flex;
   max-width: 28rem;
   gap: 0.35rem;
   overflow-x: auto;
-  padding: 0.15rem 0.2rem 0.35rem;
+  padding: 0 0.2rem 0.35rem;
 }
 
+.year-navigation button,
+.street-search select,
+.compare-button { height: 3.4rem; }
+
 .street-search {
-  display: grid;
-  gap: 0.2rem;
+  display: block;
   min-width: 0;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
 }
 
 .street-search select {
   width: 100%;
   min-width: 0;
   padding: 0 0.5rem;
-  text-transform: none;
 }
 
 .layer-controls {
-  grid-column: 2 / -1;
+  grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
@@ -194,6 +199,8 @@ h3 {
   margin-top: 1rem;
 }
 
+.annual-history > * { min-width: 0; }
+
 .annual-history h3,
 .annual-history .latest-value,
 .annual-history details { grid-column: 1; }
@@ -225,6 +232,7 @@ thead { background: var(--ink); color: var(--paper-raised); }
 
 details { margin-top: 0.65rem; color: var(--muted); }
 summary { cursor: pointer; font-weight: 800; color: var(--ink); }
+.bottom-sheet li { overflow-wrap: anywhere; }
 
 .comparison-panel { margin-top: 1rem; padding-top: 1rem; border-top: var(--line); }
 .comparison-fields,
@@ -291,7 +299,6 @@ code {
     overflow: auto;
   }
 
-  .explorer-header h1,
   .street-search,
   .layer-controls { grid-column: 1 / -1; }
   .year-navigation { max-width: calc(100vw - 7rem); }
@@ -314,6 +321,9 @@ code {
   .annual-history .latest-value,
   .annual-history details,
   .annual-history table { grid-column: 1; grid-row: auto; }
+  .annual-history table { font-size: 0.82rem; }
+  .annual-history th,
+  .annual-history td { padding: 0.3rem; }
   .selection-summary { display: none; }
 }
 

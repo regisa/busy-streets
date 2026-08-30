@@ -10,7 +10,6 @@ export function StreetSearch({
 }>) {
   return (
     <label className="street-search">
-      <span>Rechercher une rue</span>
       <select
         aria-label="Rechercher une rue"
         defaultValue=""

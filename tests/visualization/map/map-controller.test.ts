@@ -1,18 +1,26 @@
 import { describe, expect, test, vi } from "vitest";
 
 import type { VisualizationBundle } from "../../../src/visualization/contracts.js";
-import { createMapController } from "../../../src/visualization/map/map-controller.js";
+import {
+  createBaseMapStyle,
+  createMapController,
+  loadBaseMapStyle,
+} from "../../../src/visualization/map/map-controller.js";
 
 class FakeMap {
   readonly sourceIds: string[] = [];
   readonly layerIds: string[] = [];
+  readonly layers: Array<{ readonly id: string; readonly [key: string]: unknown }> = [];
   readonly featureStates: Array<{ target: unknown; state: unknown }> = [];
   readonly layoutChanges: Array<{ layer: string; property: string; value: unknown }> = [];
   readonly filters: Array<{ layer: string; filter: unknown }> = [];
   private readonly handlers = new Map<string, Set<(event: MapEvent) => void>>();
 
   addSource(id: string, _source: unknown): void { this.sourceIds.push(id); }
-  addLayer(layer: { id: string }): void { this.layerIds.push(layer.id); }
+  addLayer(layer: { readonly id: string; readonly [key: string]: unknown }): void {
+    this.layerIds.push(layer.id);
+    this.layers.push(layer);
+  }
   setFeatureState(target: unknown, state: unknown): void { this.featureStates.push({ target, state }); }
   setLayoutProperty(layer: string, property: string, value: unknown): void {
     this.layoutChanges.push({ layer, property, value });
@@ -95,6 +103,34 @@ function bundle(): VisualizationBundle {
 }
 
 describe("MapController", () => {
+  test("uses a valid contextual basemap style", async () => {
+    const contextualStyle = {
+      version: 8 as const,
+      sources: { openmaptiles: { type: "vector" } },
+      layers: [{ id: "land", type: "background" }],
+    };
+
+    await expect(
+      loadBaseMapStyle(async () => contextualStyle),
+    ).resolves.toBe(contextualStyle);
+  });
+
+  test.each([
+    ["a failed request", async () => Promise.reject(new Error("offline"))],
+    ["a malformed style", async () => ({ version: 8, layers: [] })],
+  ])("uses the neutral fallback after %s", async (_scenario, fetchStyle) => {
+    const style = await loadBaseMapStyle(fetchStyle);
+
+    expect(style).toEqual(createBaseMapStyle());
+  });
+
+  test("keeps a neutral local fallback style", () => {
+    const style = createBaseMapStyle();
+
+    expect(style.layers.map(({ id }) => id)).toEqual(["neutral-background"]);
+    expect(style.sources).toEqual({});
+  });
+
   test("adds deterministic local sources and layers with linear traffic hidden", () => {
     const map = new FakeMap();
     createMapController({ map, bundle: bundle(), onSelect: () => undefined });
@@ -110,6 +146,8 @@ describe("MapController", () => {
       property: "visibility",
       value: "none",
     });
+    const bufferLayer = map.layers.find(({ id }) => id === "buffer-fill");
+    expect(bufferLayer?.paint).toMatchObject({ "fill-opacity": 0.18 });
   });
 
   test("tracks only the current hovered street and emits map selections", () => {

@@ -3,6 +3,7 @@ coverage/
 .next/
 *.tsbuildinfo
 .superpowers/
+public/maplibre/
 
 # Full source artifacts and generated audit working data remain local.
 .cache/traffic/
