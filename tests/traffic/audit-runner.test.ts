@@ -301,31 +301,6 @@ describe("traffic audit runner", () => {
           headers: { "content-type": "application/json" },
         });
       }
-      if (url.includes("31e35ea7-c328-4411-ae8f-306ca536678a")) {
-        return new Response(
-          featureCollection([
-            {
-              type: "Feature",
-              properties: {
-                id_ign: "line-1",
-                millesime: "2023",
-                long_km: 1,
-                veh_km: 1_200,
-                pc_pl: 5,
-                numero: "D810",
-              },
-              geometry: {
-                type: "LineString",
-                coordinates: [
-                  [-1.551, 43.48],
-                  [-1.549, 43.48],
-                ],
-              },
-            },
-          ]),
-          { headers: { "content-type": "application/json" } },
-        );
-      }
       if (url.includes("comptages_routiers/exports/geojson")) {
         return new Response(
           featureCollection([
@@ -361,13 +336,12 @@ describe("traffic audit runner", () => {
     });
 
     expect(summary.sources.filter((source) => source.status === "audited"))
-      .toHaveLength(4);
+      .toHaveLength(3);
     expect(summary.sources.filter((source) => source.status === "blocked"))
       .toHaveLength(3);
     expect(summary.counts).toMatchObject({
       stations: 3,
-      observations: 4,
-      linearRecords: 1,
+      observations: 3,
       reconciliationCanonical: 3,
       osmPlausible: 3,
     });

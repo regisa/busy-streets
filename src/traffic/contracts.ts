@@ -1,12 +1,6 @@
 import { z } from "zod";
 
-import type {
-  LineString,
-  MultiLineString,
-  MultiPolygon,
-  Point,
-  Polygon,
-} from "geojson";
+import type { LineString, MultiLineString, MultiPolygon, Point, Polygon } from "geojson";
 
 export const trafficQualitySchema = z.enum([
   "measured",
@@ -39,12 +33,6 @@ export interface BiarritzGeographicFrame {
   readonly boundary: MultiPolygon;
   readonly buffer: Polygon | MultiPolygon;
   readonly bufferKilometers: 2;
-}
-
-export interface LinearGeographicCoverage {
-  readonly municipalityIntersects: boolean;
-  readonly bufferIntersects: boolean;
-  readonly lengthInsideMunicipalityKilometers: number;
 }
 
 export interface Wgs84BoundingBox {
@@ -171,21 +159,9 @@ export interface TrafficStation {
   readonly bearing?: number;
 }
 
-export interface LinearTrafficRecord {
-  readonly kind: "linear-traffic";
-  readonly id: string;
-  readonly sourceId: string;
-  readonly sourceRecordId: string;
-  readonly geometry: LineString | MultiLineString;
-  readonly roadRef?: string;
-  readonly roadName?: string;
-  readonly observation: Phase1TrafficObservation;
-}
-
 export type NormalizedEvidence =
   | TrafficStation
-  | Phase1TrafficObservation
-  | LinearTrafficRecord;
+  | Phase1TrafficObservation;
 
 export type GeographicTrafficStation = TrafficStation & {
   readonly geographicScope: GeographicScope;
@@ -195,14 +171,9 @@ export type GeographicTrafficObservation = Phase1TrafficObservation & {
   readonly geographicScope: GeographicScope;
 };
 
-export type GeographicLinearTrafficRecord = LinearTrafficRecord & {
-  readonly geographicCoverage: LinearGeographicCoverage;
-};
-
 export type GeographicEvidence =
   | GeographicTrafficStation
-  | GeographicTrafficObservation
-  | GeographicLinearTrafficRecord;
+  | GeographicTrafficObservation;
 
 export interface TrafficSourceAdapter {
   inspect(artifact: SourceArtifact): Promise<SourceInspection>;

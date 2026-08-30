@@ -22,7 +22,6 @@ export type MapSelection =
 
 export interface MapController {
   setYear(year: number | "overview"): void;
-  setLinearTrafficVisible(visible: boolean): void;
   setStreetSelection(streetSubjectIds: readonly string[]): void;
   setFocusedSelection(selection: MapSelection | null): void;
   destroy(): void;
@@ -36,7 +35,6 @@ export interface MapAdapter {
   addSource(id: string, source: unknown): void;
   addLayer(layer: { readonly id: string; readonly [key: string]: unknown }): void;
   setFeatureState(target: unknown, state: unknown): void;
-  setLayoutProperty(layer: string, property: string, value: unknown): void;
   setFilter(layer: string, filter: unknown): void;
   on(
     type: string,
@@ -102,7 +100,6 @@ export function createMapController(options: {
   const { map, bundle, onSelect } = options;
   addSources(map, bundle);
   addLayers(map);
-  map.setLayoutProperty("linear-traffic-lines", "visibility", "none");
 
   const removers: Array<() => void> = [];
   let hoveredStreetId: string | null = null;
@@ -151,17 +148,6 @@ export function createMapController(options: {
       const filter =
         year === "overview" ? null : ["in", year, ["get", "years"]];
       map.setFilter("station-points", filter);
-      map.setFilter(
-        "linear-traffic-lines",
-        year === "overview" ? null : ["==", ["get", "year"], year],
-      );
-    },
-    setLinearTrafficVisible(visible) {
-      map.setLayoutProperty(
-        "linear-traffic-lines",
-        "visibility",
-        visible ? "visible" : "none",
-      );
     },
     setStreetSelection(streetSubjectIds) {
       const nextStreetIds = new Set(streetSubjectIds);
@@ -259,19 +245,6 @@ function addSources(map: MapAdapter, bundle: VisualizationBundle): void {
       ),
     ),
   });
-  map.addSource("linear-traffic", {
-    type: "geojson",
-    promoteId: "id",
-    data: featureCollection(
-      bundle.linearRecords.map((record) =>
-        feature(record.id, record.geometry, {
-          id: record.id,
-          year: record.observation.year,
-          quality: record.observation.quality,
-        }),
-      ),
-    ),
-  });
   map.addSource("stations", {
     type: "geojson",
     promoteId: "id",
@@ -330,12 +303,6 @@ function addLayers(map: MapAdapter): void {
       "line-width": 4,
       "line-dasharray": [2, 1.5],
     },
-  });
-  map.addLayer({
-    id: "linear-traffic-lines",
-    type: "line",
-    source: "linear-traffic",
-    paint: { "line-color": "#d19b00", "line-width": 3 },
   });
   map.addLayer({
     id: "station-points",

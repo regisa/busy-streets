@@ -53,32 +53,6 @@ const evidence: GeographicEvidence[] = [
     roadRef: "D810",
     geographicScope: "inside-municipality",
   },
-  {
-    kind: "linear-traffic",
-    id: "linear:1",
-    sourceId: "dreal-2023-linear",
-    sourceRecordId: "linear:record:1",
-    geometry: {
-      type: "LineString",
-      coordinates: [[0, 0], [1, 1]],
-    },
-    observation: {
-      id: "linear:observation:2023",
-      sourceRecordId: "linear:record:1",
-      sourceGeometryId: "linear:1",
-      year: 2023,
-      periodType: "annual",
-      vehiclesPerDay: 1_200,
-      heavyVehiclePercent: null,
-      quality: "unknown",
-      sourceId: "dreal-2023-linear",
-    },
-    geographicCoverage: {
-      municipalityIntersects: true,
-      bufferIntersects: true,
-      lengthInsideMunicipalityKilometers: 0.25,
-    },
-  },
 ];
 
 const issues: AuditIssue[] = [
@@ -240,20 +214,18 @@ describe("audit summary", () => {
       recommendation: "limited-corridor-or-station-explorer",
     });
 
-    expect(summary.years).toEqual([2022, 2023]);
+    expect(summary.years).toEqual([2022]);
     expect(summary.qualityCounts).toEqual({
       measured: 1,
       modeled: 0,
       interpolated: 0,
-      unknown: 1,
+      unknown: 0,
     });
     expect(summary.counts).toEqual({
       continuityProbable: 1,
       continuityReview: 0,
       continuitySeparate: 0,
-      linearMunicipalityIntersections: 1,
-      linearRecords: 1,
-      observations: 2,
+      observations: 1,
       osmAmbiguous: 1,
       osmPlausible: 0,
       osmUnmatched: 0,

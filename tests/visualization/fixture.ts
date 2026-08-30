@@ -50,19 +50,6 @@ export function visualizationBundleFixture(): VisualizationBundle {
       ],
       issues: [{ code: "osm-match-ambiguous", severity: "warning", message: "OSM road match is ambiguous for station:2024" }],
     }],
-    linearRecords: [{
-      id: "linear:2023",
-      sourceId: "dreal-2024-point",
-      sourceRecordId: "record:linear",
-      geometry: { type: "LineString", coordinates: [[-1.56, 43.48], [-1.54, 43.48]] },
-      observation: {
-        year: 2023,
-        vehiclesPerDay: 12_000,
-        heavyVehiclePercent: null,
-        quality: "unknown",
-        sourceLinks: [sourceLink(2023)],
-      },
-    }],
     streetSubjects: [
       {
         id: "street:gare",

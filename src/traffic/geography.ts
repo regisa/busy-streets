@@ -1,5 +1,4 @@
 import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
-import booleanIntersects from "@turf/boolean-intersects";
 import buffer from "@turf/buffer";
 import { feature, lineString } from "@turf/helpers";
 import length from "@turf/length";
@@ -14,7 +13,6 @@ import { z } from "zod";
 import type {
   BiarritzGeographicFrame,
   GeographicScope,
-  LinearGeographicCoverage,
   Wgs84BoundingBox,
 } from "./contracts.js";
 
@@ -119,13 +117,6 @@ export function geographicFrameBoundingBox(
   }
 
   return { west, south, east, north };
-}
-
-function lineStringLengthInsideMunicipality(
-  geometry: LineString,
-  boundary: MultiPolygon,
-): number {
-  return lineStringMunicipalityLengths(geometry, boundary).insideInclusive;
 }
 
 interface MunicipalityLengths {
@@ -280,29 +271,6 @@ function interpolatePosition(
     start[0] + (end[0] - start[0]) * parameter,
     start[1] + (end[1] - start[1]) * parameter,
   ];
-}
-
-export function classifyLineGeographicCoverage(
-  line: LineString | MultiLineString,
-  frame: BiarritzGeographicFrame,
-): LinearGeographicCoverage {
-  const lineFeature = feature(line);
-  const boundaryFeature = feature(frame.boundary);
-  const bufferFeature = feature(frame.buffer);
-  const lines =
-    line.type === "LineString"
-      ? [line]
-      : line.coordinates.map((coordinates) => lineString(coordinates).geometry);
-
-  return {
-    municipalityIntersects: booleanIntersects(lineFeature, boundaryFeature),
-    bufferIntersects: booleanIntersects(lineFeature, bufferFeature),
-    lengthInsideMunicipalityKilometers: lines.reduce(
-      (total, geometry) =>
-        total + lineStringLengthInsideMunicipality(geometry, frame.boundary),
-      0,
-    ),
-  };
 }
 
 export function isIngressCandidate(

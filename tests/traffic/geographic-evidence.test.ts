@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
 
 import type {
-  LinearTrafficRecord,
   NormalizedEvidence,
   Phase1TrafficObservation,
   TrafficStation,
@@ -40,7 +39,7 @@ async function collect<T>(values: AsyncIterable<T>): Promise<T[]> {
 }
 
 describe("geographic evidence view", () => {
-  test("scopes a station and its earlier observation while preserving line evidence", async () => {
+  test("scopes a station and its earlier observation", async () => {
     const station = Object.freeze({
       kind: "station" as const,
       id: "source:station:inside",
@@ -64,34 +63,9 @@ describe("geographic evidence view", () => {
       quality: "measured" as const,
       sourceId: "source",
     }) satisfies Phase1TrafficObservation;
-    const linear = Object.freeze({
-      kind: "linear-traffic" as const,
-      id: "source:line:1",
-      sourceId: "source",
-      sourceRecordId: "source:record:line",
-      geometry: Object.freeze({
-        type: "LineString" as const,
-        coordinates: Object.freeze([
-          Object.freeze([-0.005, 0.005]),
-          Object.freeze([0.015, 0.005]),
-        ]) as unknown as [[number, number], [number, number]],
-      }),
-      observation: Object.freeze({
-        id: "source:record:line:observation:2023",
-        sourceRecordId: "source:record:line",
-        sourceGeometryId: "line-1",
-        year: 2023,
-        periodType: "annual" as const,
-        vehiclesPerDay: 10_000,
-        heavyVehiclePercent: null,
-        quality: "unknown" as const,
-        sourceId: "source",
-      }),
-    }) satisfies LinearTrafficRecord;
     const input: readonly NormalizedEvidence[] = [
       observation,
       station,
-      linear,
     ];
 
     const result = await collect(applyBiarritzGeographicFrame(input, frame));
@@ -99,18 +73,9 @@ describe("geographic evidence view", () => {
     expect(result).toEqual([
       { ...station, geographicScope: "inside-municipality" },
       { ...observation, geographicScope: "inside-municipality" },
-      {
-        ...linear,
-        geographicCoverage: {
-          municipalityIntersects: true,
-          bufferIntersects: true,
-          lengthInsideMunicipalityKilometers: expect.closeTo(1.11195, 3),
-        },
-      },
     ]);
     expect(station).not.toHaveProperty("geographicScope");
     expect(observation).not.toHaveProperty("geographicScope");
-    expect(linear).not.toHaveProperty("geographicCoverage");
   });
 
   test.each([

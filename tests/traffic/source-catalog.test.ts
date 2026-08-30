@@ -6,12 +6,11 @@ import {
 } from "../../src/traffic/source-catalog.js";
 
 describe("DREAL source catalogue", () => {
-  test("contains the six approved point and linear datasets through 2024", () => {
+  test("excludes the rejected 2023 linear dataset from the approved sources", () => {
     expect(DREAL_TRAFFIC_SOURCES.map((source) => source.id)).toEqual([
       "dreal-2011-2015-point",
       "dreal-2015-2019-point",
       "dreal-2019-2023-point",
-      "dreal-2023-linear",
       "dreal-2024-point",
       "dreal-2024-linear",
     ]);
@@ -27,7 +26,6 @@ describe("DREAL source catalogue", () => {
       ["dreal-2011-2015-point", true],
       ["dreal-2015-2019-point", true],
       ["dreal-2019-2023-point", false],
-      ["dreal-2023-linear", false],
       ["dreal-2024-point", false],
       ["dreal-2024-linear", false],
     ]);
@@ -48,17 +46,6 @@ describe("DREAL source catalogue", () => {
           endpoint:
             "https://datacarto.sigena.fr/wfs/5f0e7e36-dc34-4983-903a-e1a27f570d90",
           typeName: "ms:l_comptage_trafic_p_r75",
-          version: "2.0.0",
-          outputFormat: "application/json; subtype=geojson",
-          outputCrs: "EPSG:4326",
-        },
-      ],
-      [
-        "dreal-2023-linear",
-        {
-          endpoint:
-            "https://datacarto.sigena.fr/wfs/31e35ea7-c328-4411-ae8f-306ca536678a",
-          typeName: "ms:l_tmja2023_l_r74",
           version: "2.0.0",
           outputFormat: "application/json; subtype=geojson",
           outputCrs: "EPSG:4326",
@@ -89,7 +76,7 @@ describe("DREAL source catalogue", () => {
     ]);
   });
 
-  test("adds the open-licensed CD64 latest-count source without changing the six-source DREAL scope", () => {
+  test("adds the open-licensed CD64 latest-count source without changing the five-source DREAL scope", () => {
     expect(TRAFFIC_SOURCES.map((source) => source.id)).toEqual([
       ...DREAL_TRAFFIC_SOURCES.map((source) => source.id),
       "cd64-latest-road-counts-point",

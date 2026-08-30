@@ -2,7 +2,6 @@ import { describe, expect, test } from "vitest";
 
 import { Dreal2024PointAdapter } from "../../src/traffic/adapters/dreal-2024-point.js";
 import { Dreal2019To2023PointAdapter } from "../../src/traffic/adapters/dreal-2019-2023-point.js";
-import { Dreal2023LinearAdapter } from "../../src/traffic/adapters/dreal-2023-linear.js";
 import { createTrafficSourceAdapter } from "../../src/traffic/adapters/registry.js";
 
 describe("traffic source adapter registry", () => {
@@ -15,9 +14,7 @@ describe("traffic source adapter registry", () => {
     expect(
       createTrafficSourceAdapter("dreal-2019-2023-point", resolvePath),
     ).toBeInstanceOf(Dreal2019To2023PointAdapter);
-    expect(
-      createTrafficSourceAdapter("dreal-2023-linear", resolvePath),
-    ).toBeInstanceOf(Dreal2023LinearAdapter);
+    expect(createTrafficSourceAdapter("dreal-2023-linear", resolvePath)).toBeNull();
     expect(
       createTrafficSourceAdapter("dreal-2024-linear", resolvePath),
     ).toBeNull();

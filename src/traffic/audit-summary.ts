@@ -34,13 +34,8 @@ export function buildAuditSummary(input: BuildAuditSummaryInput): AuditSummary {
     "Geographic evidence IDs must be unique",
   );
   assertUnique(
-    input.evidence.filter(
-      (item) => !("kind" in item) || item.kind === "linear-traffic",
-    ),
-    (item) =>
-      "kind" in item && item.kind === "linear-traffic"
-        ? item.observation.id
-        : item.id,
+    input.evidence.filter((item) => !("kind" in item)),
+    (item) => item.id,
     "Traffic observation IDs must be unique",
   );
   assertUnique(
@@ -76,11 +71,9 @@ export function buildAuditSummary(input: BuildAuditSummaryInput): AuditSummary {
   let stationsBufferOnly = 0;
   let stationsOutside = 0;
   let observations = 0;
-  let linearRecords = 0;
-  let linearMunicipalityIntersections = 0;
 
   for (const item of input.evidence) {
-    if ("kind" in item && item.kind === "station") {
+    if ("kind" in item) {
       stations += 1;
       if (item.geographicScope === "inside-municipality") {
         stationsInsideMunicipality += 1;
@@ -88,16 +81,6 @@ export function buildAuditSummary(input: BuildAuditSummaryInput): AuditSummary {
         stationsBufferOnly += 1;
       } else {
         stationsOutside += 1;
-      }
-      continue;
-    }
-    if ("kind" in item && item.kind === "linear-traffic") {
-      linearRecords += 1;
-      observations += 1;
-      years.add(item.observation.year);
-      qualityCounts[item.observation.quality] += 1;
-      if (item.geographicCoverage.municipalityIntersects) {
-        linearMunicipalityIntersections += 1;
       }
       continue;
     }
@@ -136,8 +119,6 @@ export function buildAuditSummary(input: BuildAuditSummaryInput): AuditSummary {
       continuityProbable: continuityCounts.get("probable") ?? 0,
       continuityReview: continuityCounts.get("review") ?? 0,
       continuitySeparate: continuityCounts.get("separate") ?? 0,
-      linearMunicipalityIntersections,
-      linearRecords,
       observations,
       osmAmbiguous: osmCounts.get("ambiguous") ?? 0,
       osmPlausible: osmCounts.get("plausible") ?? 0,

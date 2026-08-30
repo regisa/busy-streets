@@ -1,15 +1,6 @@
-import along from "@turf/along";
-import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
-import { feature } from "@turf/helpers";
-import length from "@turf/length";
-import lineSplit from "@turf/line-split";
-
-import type { LineString, MultiLineString, Polygon, MultiPolygon } from "geojson";
-
 import type { AuditEvidenceSnapshot } from "../traffic/audit-evidence.js";
 import type {
   AuditIssue,
-  GeographicLinearTrafficRecord,
   GeographicTrafficStation,
 } from "../traffic/contracts.js";
 import type { IgnRoadArtifact } from "../traffic/ign-roads.js";
@@ -96,41 +87,6 @@ export function buildVisualizationBundle(
       };
     });
 
-  const linearRecords = input.audit.evidence
-    .filter(isLinearRecord)
-    .sort((left, right) => left.id.localeCompare(right.id))
-    .flatMap((record) => {
-      if (!record.geographicCoverage.bufferIntersects) return [];
-      const geometry = clipGeometryToArea(record.geometry, input.audit.frame.buffer);
-      if (!geometry) return [];
-      const source = findTrafficSource(record.sourceId);
-      if (!source) throw new Error(`Unknown linear traffic source: ${record.sourceId}`);
-      return [
-        {
-          id: record.id,
-          sourceId: record.sourceId,
-          sourceRecordId: record.sourceRecordId,
-          geometry,
-          ...(record.roadRef ? { roadRef: record.roadRef } : {}),
-          ...(record.roadName ? { roadName: record.roadName } : {}),
-          observation: {
-            year: record.observation.year,
-            vehiclesPerDay: record.observation.vehiclesPerDay,
-            heavyVehiclePercent: record.observation.heavyVehiclePercent,
-            quality: record.observation.quality,
-            sourceLinks: [
-              {
-                observationId: record.observation.id,
-                sourceId: record.sourceId,
-                sourceRecordId: record.observation.sourceRecordId,
-                publicationDate: source.publicationDate,
-              },
-            ],
-          },
-        },
-      ];
-    });
-
   return visualizationBundleSchema.parse({
     schemaVersion: 1,
     asOf: input.audit.config.asOf,
@@ -140,7 +96,6 @@ export function buildVisualizationBundle(
     buffer: structuredClone(input.audit.frame.buffer),
     sources,
     stationGroups,
-    linearRecords,
     streetSubjects: [...input.streets]
       .sort((left, right) => left.id.localeCompare(right.id))
       .map((street) => ({ ...structuredClone(street), evidenceState: "no-data" })),
@@ -236,36 +191,4 @@ function compareIssues(left: AuditIssue, right: AuditIssue): number {
     (left.sourceRecordId ?? "").localeCompare(right.sourceRecordId ?? "") ||
     left.message.localeCompare(right.message)
   );
-}
-
-function isLinearRecord(
-  value: AuditEvidenceSnapshot["evidence"][number],
-): value is GeographicLinearTrafficRecord {
-  return "kind" in value && value.kind === "linear-traffic";
-}
-
-function clipGeometryToArea(
-  geometry: LineString | MultiLineString,
-  area: Polygon | MultiPolygon,
-): LineString | MultiLineString | null {
-  const lines: LineString[] =
-    geometry.type === "LineString"
-      ? [geometry]
-      : geometry.coordinates.map((coordinates) => ({ type: "LineString", coordinates }));
-  const retained = lines.flatMap((line) => {
-    const split = lineSplit(feature(line), feature(area));
-    return split.features
-      .filter((part) => {
-        const partLength = length(part, { units: "kilometers" });
-        const midpoint = along(part, partLength / 2, { units: "kilometers" });
-        return booleanPointInPolygon(midpoint, area);
-      })
-      .map(({ geometry: part }) => part);
-  });
-  if (retained.length === 0) return null;
-  if (retained.length === 1) return retained[0] ?? null;
-  return {
-    type: "MultiLineString",
-    coordinates: retained.map(({ coordinates }) => coordinates),
-  };
 }

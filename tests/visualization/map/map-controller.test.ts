@@ -12,7 +12,6 @@ class FakeMap {
   readonly layerIds: string[] = [];
   readonly layers: Array<{ readonly id: string; readonly [key: string]: unknown }> = [];
   readonly featureStates: Array<{ target: unknown; state: unknown }> = [];
-  readonly layoutChanges: Array<{ layer: string; property: string; value: unknown }> = [];
   readonly filters: Array<{ layer: string; filter: unknown }> = [];
   private readonly handlers = new Map<string, Set<(event: MapEvent) => void>>();
 
@@ -22,9 +21,6 @@ class FakeMap {
     this.layers.push(layer);
   }
   setFeatureState(target: unknown, state: unknown): void { this.featureStates.push({ target, state }); }
-  setLayoutProperty(layer: string, property: string, value: unknown): void {
-    this.layoutChanges.push({ layer, property, value });
-  }
   setFilter(layer: string, filter: unknown): void { this.filters.push({ layer, filter }); }
   on(type: string, layer: string, handler: (event: MapEvent) => void): void {
     const key = `${type}:${layer}`;
@@ -72,7 +68,6 @@ function bundle(): VisualizationBundle {
       observations: [],
       issues: [],
     }],
-    linearRecords: [],
     streetSubjects: [
       {
         id: "street:verdun",
@@ -131,21 +126,16 @@ describe("MapController", () => {
     expect(style.sources).toEqual({});
   });
 
-  test("adds deterministic local sources and layers with linear traffic hidden", () => {
+  test("adds deterministic local sources and layers", () => {
     const map = new FakeMap();
     createMapController({ map, bundle: bundle(), onSelect: () => undefined });
 
     expect(map.sourceIds).toEqual([
-      "boundary", "buffer", "streets", "targets", "linear-traffic", "stations",
+      "boundary", "buffer", "streets", "targets", "stations",
     ]);
     expect(map.layerIds).toEqual([
-      "buffer-fill", "boundary-line", "street-lines", "target-lines", "linear-traffic-lines", "station-points",
+      "buffer-fill", "boundary-line", "street-lines", "target-lines", "station-points",
     ]);
-    expect(map.layoutChanges).toContainEqual({
-      layer: "linear-traffic-lines",
-      property: "visibility",
-      value: "none",
-    });
     const bufferLayer = map.layers.find(({ id }) => id === "buffer-fill");
     expect(bufferLayer?.paint).toMatchObject({ "fill-opacity": 0.18 });
   });
@@ -173,17 +163,11 @@ describe("MapController", () => {
     expect(map.handlerCount()).toBe(0);
   });
 
-  test("controls overview filters and linear visibility", () => {
+  test("controls year filters", () => {
     const map = new FakeMap();
     const controller = createMapController({ map, bundle: bundle(), onSelect: () => undefined });
-    controller.setLinearTrafficVisible(true);
     controller.setYear(2024);
 
-    expect(map.layoutChanges.at(-1)).toEqual({
-      layer: "linear-traffic-lines",
-      property: "visibility",
-      value: "visible",
-    });
     expect(map.filters).toContainEqual({
       layer: "station-points",
       filter: ["in", 2024, ["get", "years"]],

@@ -5,15 +5,12 @@ import { visualizationBundleSchema, type VisualizationBundle } from "./contracts
 export type LocalBundleLoadResult =
   | { readonly status: "ready"; readonly bundle: VisualizationBundle }
   | { readonly status: "missing"; readonly expectedPath: string }
-  | { readonly status: "invalid"; readonly details: readonly string[] }
-  | { readonly status: "disabled" };
+  | { readonly status: "invalid"; readonly details: readonly string[] };
 
 export async function loadLocalVisualizationBundle(options: {
   readonly path: string;
   readonly runtime: "development" | "test" | "production";
 }): Promise<LocalBundleLoadResult> {
-  if (options.runtime === "production") return { status: "disabled" };
-
   let source: string;
   try {
     source = await readFile(options.path, "utf8");

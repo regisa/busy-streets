@@ -83,7 +83,7 @@ h3 {
   left: 1rem;
   right: 1rem;
   display: grid;
-  grid-template-columns: minmax(28rem, 1.2fr) minmax(22rem, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.65rem;
   align-items: start;
   padding: 0.8rem;
@@ -94,10 +94,10 @@ h3 {
 
 .year-navigation {
   display: flex;
-  max-width: 28rem;
+  flex-wrap: wrap;
+  align-content: start;
   gap: 0.35rem;
-  overflow-x: auto;
-  padding: 0 0.2rem 0.35rem;
+  min-width: 0;
 }
 
 .year-navigation button,
@@ -164,27 +164,6 @@ h3 {
 .street-chip button { min-height: 1.75rem; padding: 0.1rem 0.45rem; border-width: 0 0 0 1px; }
 .street-search-status { min-height: 1em; color: var(--muted); font-size: 0.75rem; }
 
-.layer-controls {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: center;
-  margin: 0;
-  padding: 0.55rem 0.75rem;
-  border: 1px solid var(--ink);
-  font-size: 0.86rem;
-}
-
-.layer-controls legend {
-  padding: 0 0.35rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.layer-controls label { display: flex; gap: 0.45rem; align-items: center; }
-.layer-controls input { width: 1.15rem; height: 1.15rem; accent-color: var(--data-red); }
-
 .evidence-label,
 .quality-label {
   display: inline-block;
@@ -236,8 +215,22 @@ h3 {
   background: var(--ink);
 }
 
-.street-comparison-table tbody th:first-child > span:first-child { display: block; }
-.street-comparison-table .evidence-label { margin-top: 0.35rem; white-space: normal; }
+.street-comparison-name {
+  display: flex;
+  gap: 0.5rem;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.street-comparison-name > span { padding-top: 0.2rem; }
+.street-row-remove {
+  flex: 0 0 auto;
+  min-height: 1.75rem;
+  padding: 0.05rem 0.45rem;
+  border-width: 1px;
+  line-height: 1;
+}
+
 .street-comparison-table td { min-width: 8.5rem; vertical-align: top; }
 .street-comparison-table td strong,
 .street-comparison-table td .quality-label { display: block; }
@@ -271,6 +264,8 @@ h3 {
 }
 
 .bottom-sheet h2 { font-size: clamp(1.8rem, 4vw, 3.4rem); }
+.sheet-actions { display: flex; gap: 0.45rem; align-items: stretch; }
+.sheet-clear { min-height: 2.6rem; font-weight: 700; }
 .sheet-close { flex: 0 0 auto; width: 2.6rem; padding: 0; font-size: 1.7rem; }
 
 .annual-history {
@@ -380,9 +375,13 @@ code {
     overflow: auto;
   }
 
-  .street-search,
-  .layer-controls { grid-column: 1 / -1; }
-  .year-navigation { max-width: calc(100vw - 7rem); }
+  .street-search { grid-column: 1 / -1; }
+  .year-navigation {
+    flex-wrap: nowrap;
+    max-width: calc(100vw - 7rem);
+    overflow-x: auto;
+    padding-bottom: 0.35rem;
+  }
 
   .bottom-sheet {
     right: 0;

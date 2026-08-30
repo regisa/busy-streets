@@ -58,6 +58,8 @@ describe("StreetComparisonSheet", () => {
         selectedCount={2}
         collapsed={false}
         onCollapsedChange={() => undefined}
+        onRemoveStreet={() => undefined}
+        onClearSelection={() => undefined}
       />,
     );
 
@@ -67,7 +69,7 @@ describe("StreetComparisonSheet", () => {
     expect(screen.getByText("D810 · Biarritz")).toBeVisible();
     expect(screen.getByText(/30.*000/)).toBeVisible();
     expect(screen.getByText("Mesuré")).toBeVisible();
-    expect(screen.getByText("Correspondance à vérifier")).toBeVisible();
+    expect(screen.queryByText("Correspondance à vérifier")).not.toBeInTheDocument();
     expect(screen.getAllByText("Aucune donnée").length).toBeGreaterThanOrEqual(2);
     expect(screen.queryByText(/total/i)).not.toBeInTheDocument();
   });
@@ -81,6 +83,8 @@ describe("StreetComparisonSheet", () => {
         selectedCount={3}
         collapsed={false}
         onCollapsedChange={onCollapsedChange}
+        onRemoveStreet={() => undefined}
+        onClearSelection={() => undefined}
       />,
     );
 
@@ -93,6 +97,8 @@ describe("StreetComparisonSheet", () => {
         selectedCount={3}
         collapsed
         onCollapsedChange={onCollapsedChange}
+        onRemoveStreet={() => undefined}
+        onClearSelection={() => undefined}
       />,
     );
     await user.click(screen.getByRole("button", { name: "3 rues sélectionnées" }));
@@ -106,6 +112,8 @@ describe("StreetComparisonSheet", () => {
         selectedCount={2}
         collapsed={false}
         onCollapsedChange={() => undefined}
+        onRemoveStreet={() => undefined}
+        onClearSelection={() => undefined}
       />,
     );
 
@@ -127,6 +135,8 @@ describe("StreetComparisonSheet", () => {
         selectedCount={2}
         collapsed={false}
         onCollapsedChange={() => undefined}
+        onRemoveStreet={() => undefined}
+        onClearSelection={() => undefined}
       />,
     );
 

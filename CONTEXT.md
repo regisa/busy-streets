@@ -37,9 +37,6 @@ evidence, licensing, assignment, deployment, or publication gates.
 - **Reconciled observation**: a derived annual group that keeps all distinct
   value-and-quality variants and their source links. It has a canonical variant
   only when the precedence rules resolve the evidence.
-- **Linear traffic record**: traffic evidence supplied on a source road
-  geometry. Phase 1 preserves that geometry and any intersections derived from
-  it.
 - **Continuity candidate**: a derived proposal that two source stations may be
   the same counter over time. It never rewrites either station.
 - **Road-match candidate**: a dated Phase 1 assessment of whether a station can
@@ -52,9 +49,9 @@ evidence, licensing, assignment, deployment, or publication gates.
   human audit report will be generated.
 - **Visualization bundle**: a deterministic, versioned, gitignored view model
   derived from the audit evidence snapshot and IGN reference geometry. It
-  contains only canonical point observations, display-clipped linear evidence,
-  source links, explicit assignments, and public-safe provenance. Acquisition
-  timestamps do not affect its analytical bytes.
+  contains only canonical point observations, source links, explicit
+  assignments, and public-safe provenance. Acquisition timestamps do not affect
+  its analytical bytes.
 - **Street subject**: one connected set of named IGN BD TOPO segments grouped
   by an approved normalized street name. It is a local interaction identity,
   not a permanent road ID and not evidence that traffic belongs to the street.
@@ -130,12 +127,14 @@ test, a completed audit, and a deployed product are different kinds of evidence.
 - Keep total external data and service spending for the POC at or below EUR 100
   including VAT. This cap does not authorize a purchase, subscription, paid
   trial, payment method, or account creation.
-- Do not place raw downloads, unclear-licence data, credentials, or cache
-  artifacts in Git.
+- Do not place raw downloads, credentials, or cache artifacts in Git. The
+  tracked visualization snapshot is an explicit POC exception and must remain
+  derived, attributable, and separate from raw source downloads.
 - Keep street reference geometry, station evidence, and traffic assignment as
   separate layers. Never infer an assignment from name or proximity alone.
-- Refuse the local visualization bundle in a production runtime until data
-  release rights and publication criteria receive separate approval.
+- Production may load the tracked complete POC visualization snapshot. Licence
+  review and any required permissions remain a gate before broad promotion or
+  a production launch.
 
 ## Operating boundaries
 

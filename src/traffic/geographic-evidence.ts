@@ -7,10 +7,7 @@ import type {
   Phase1TrafficObservation,
   TrafficIssueReporter,
 } from "./contracts.js";
-import {
-  classifyLineGeographicCoverage,
-  classifyPointGeographicScope,
-} from "./geography.js";
+import { classifyPointGeographicScope } from "./geography.js";
 
 export async function* applyBiarritzGeographicFrame(
   evidence: AsyncIterable<NormalizedEvidence> | Iterable<NormalizedEvidence>,
@@ -25,7 +22,7 @@ export async function* applyBiarritzGeographicFrame(
   >();
 
   for await (const item of evidence) {
-    if ("kind" in item && item.kind === "station") {
+    if ("kind" in item) {
       if (seenStationIds.has(item.id)) {
         failGeographicIssue(
           {
@@ -47,14 +44,6 @@ export async function* applyBiarritzGeographicFrame(
         yield { ...observation, geographicScope };
       }
       pendingObservations.delete(item.id);
-      continue;
-    }
-
-    if ("kind" in item && item.kind === "linear-traffic") {
-      yield {
-        ...item,
-        geographicCoverage: classifyLineGeographicCoverage(item.geometry, frame),
-      };
       continue;
     }
 

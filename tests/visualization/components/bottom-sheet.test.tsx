@@ -13,7 +13,7 @@ import { visualizationBundleFixture } from "../fixture.js";
 afterEach(cleanup);
 
 describe("BottomSheet", () => {
-  test("shows annual station evidence, uncertainty, members, and provenance", () => {
+  test("shows annual station evidence, members, and provenance without matchability badges", () => {
     render(
       <BottomSheet
         bundle={visualizationBundleFixture()}
@@ -28,7 +28,7 @@ describe("BottomSheet", () => {
     expect(screen.getByRole("table", { name: "Valeurs annuelles" })).toBeVisible();
     expect(screen.getByRole("img", { name: /Évolution annuelle/ })).toBeVisible();
     expect(screen.getByRole("button", { name: "Fermer les détails" })).toBeVisible();
-    expect(screen.getByText("Correspondance routière ambiguë")).toBeVisible();
+    expect(screen.queryByText("Correspondance routière ambiguë")).not.toBeInTheDocument();
     expect(screen.getByText("station:2023")).toBeVisible();
     expect(screen.getByText("station:2024")).toBeVisible();
     expect(screen.getByText((_, element) => element?.tagName === "LI" && element.textContent?.includes("record:2024") === true)).toBeVisible();
@@ -54,7 +54,7 @@ describe("BottomSheet", () => {
       />,
     );
     expect(screen.getByText(fr.comparisonUnavailable)).toBeVisible();
-    expect(screen.getByText(fr.candidateReview)).toBeVisible();
+    expect(screen.queryByText("Correspondance à vérifier")).not.toBeInTheDocument();
     expect(screen.queryByText(/véhicules par jour/)).not.toBeInTheDocument();
   });
 
@@ -75,7 +75,7 @@ describe("BottomSheet", () => {
         onClose={() => undefined}
       />,
     );
-    expect(screen.getByText(fr.candidateReview)).toBeVisible();
+    expect(screen.queryByText("Correspondance à vérifier")).not.toBeInTheDocument();
     expect(screen.getByText(fr.noData)).toBeVisible();
     expect(screen.queryByText(/32 000/)).not.toBeInTheDocument();
   });

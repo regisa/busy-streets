@@ -14,7 +14,6 @@ import {
   selectStreetGroups,
 } from "../street-groups";
 import { BottomSheet } from "./BottomSheet";
-import { LayerControls } from "./LayerControls";
 import { StreetComparisonSheet } from "./StreetComparisonSheet";
 import { StreetSearch } from "./StreetSearch";
 
@@ -31,7 +30,6 @@ export function TrafficExplorer({
   bundle: VisualizationBundle;
 }>) {
   const [year, setYear] = useState<number | "overview">("overview");
-  const [linearTrafficVisible, setLinearTrafficVisible] = useState(false);
   const [focusedSelection, setFocusedSelection] =
     useState<MapSelection | null>(null);
   const [comparisonCollapsed, setComparisonCollapsed] = useState(false);
@@ -64,6 +62,10 @@ export function TrafficExplorer({
     setSelectedStreetGroupIds((current) =>
       current.filter((id) => id !== groupId),
     );
+  }, []);
+
+  const clearStreetSelection = useCallback(() => {
+    setSelectedStreetGroupIds([]);
   }, []);
 
   const toggleStreet = useCallback((groupId: string) => {
@@ -99,7 +101,6 @@ export function TrafficExplorer({
         selectedStreetSubjectIds={selectedStreetSubjectIds}
         focusedSelection={focusedSelection}
         year={year}
-        linearTrafficVisible={linearTrafficVisible}
         onSelect={selectFromMap}
       />
       <header className="explorer-header">
@@ -130,10 +131,6 @@ export function TrafficExplorer({
           onAdd={addStreet}
           onRemove={removeStreet}
         />
-        <LayerControls
-          linearTrafficVisible={linearTrafficVisible}
-          onLinearTrafficVisibleChange={setLinearTrafficVisible}
-        />
       </header>
       <p className="selection-summary" aria-live="polite">
         {fr.selectedStreetCount(selectedStreetGroups.length)}
@@ -152,6 +149,8 @@ export function TrafficExplorer({
           selectedCount={selectedStreetGroups.length}
           collapsed={comparisonCollapsed}
           onCollapsedChange={setComparisonCollapsed}
+          onRemoveStreet={removeStreet}
+          onClearSelection={clearStreetSelection}
         />
       ) : null}
     </main>

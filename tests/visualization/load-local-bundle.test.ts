@@ -56,7 +56,6 @@ function validBundle() {
     buffer: { type: "Polygon", coordinates: [[...ring]] },
     sources: [],
     stationGroups: [],
-    linearRecords: [],
     streetSubjects: subjects,
     targetCorridors: subjects.map((subject, index) => ({
       targetId: index === 0 ? "avenue-de-la-gare" : "avenue-de-verdun",
@@ -79,13 +78,16 @@ describe("local visualization bundle loader", () => {
     ).resolves.toEqual({ status: "ready", bundle });
   });
 
-  test("refuses production before reading a local file", async () => {
+  test("loads and validates a release bundle in production", async () => {
+    const bundle = validBundle();
+    const path = await temporaryFile("public-bundle.json", bundle);
+
     await expect(
       loadLocalVisualizationBundle({
-        path: "/not/read/in/production.json",
+        path,
         runtime: "production",
       }),
-    ).resolves.toEqual({ status: "disabled" });
+    ).resolves.toEqual({ status: "ready", bundle });
   });
 
   test("reports a missing expected path", async () => {

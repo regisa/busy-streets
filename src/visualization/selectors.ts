@@ -32,7 +32,6 @@ export function selectAvailableYears(
       ...bundle.stationGroups.flatMap((group) =>
         group.observations.map(({ year }) => year),
       ),
-      ...bundle.linearRecords.map(({ observation }) => observation.year),
     ]),
   ].sort((left, right) => left - right);
 }

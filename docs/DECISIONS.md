@@ -286,8 +286,9 @@ control.
 
 The preferred acquisition order is:
 
-1. request existing 2015 traffic-survey files and 2018/2022 noise-model inputs
-   from the responsible public bodies;
+1. request existing 2015 traffic-survey files, the 2019-2020 BAB entry-point
+   study and complementary counts, and every available Biarritz noise-model
+   input table from the responsible public bodies;
 2. request exact-street samples and quotes from Michelin Mobility Intelligence
    and MyTraffic for passage or modeled-volume history;
 3. use TomTom Traffic Stats or INRIX Roadway Analytics as a separate historical
@@ -317,7 +318,7 @@ only after its terms and exact-street coverage are checked.
 
 ## D-017: Build a local-only map-led evidence prototype
 
-- Status: Accepted
+- Status: Superseded by D-021
 - Accepted: 2026-08-30
 
 The project may implement a local Next.js and MapLibre prototype before the
@@ -364,7 +365,7 @@ licence, attribution, and cost decision.
 
 ## D-019: Use OpenFreeMap Positron as local prototype context
 
-- Status: Accepted
+- Status: Superseded by D-021
 - Accepted: 2026-08-30
 
 The local prototype uses OpenFreeMap's OSM-derived Positron vector style as a
@@ -400,5 +401,45 @@ selection, and station details may open without clearing it.
 
 The source street layer owns map clicks beneath the priority overlay so one
 pointer action cannot toggle a street twice. Candidate-review assignments and
-target-corridor status remain visible evidence states but never supply traffic
-values.
+target-corridor status remain in the evidence model but are not repeated as
+interface badges, and they never supply traffic values.
+
+## D-021: Unlock the complete POC for limited sharing
+
+- Status: Accepted
+- Accepted: 2026-08-30
+
+The production runtime loads a tracked snapshot of the complete validated
+visualization bundle so the existing link can be shown to a limited audience.
+Development continues to use the gitignored working bundle. The tracked
+snapshot is regenerated explicitly with `pnpm traffic:visualize:public`; it is
+never assembled from raw downloads during a remote build.
+
+At the owner's explicit direction, the snapshot retains all current display
+evidence rather than filtering DREAL-derived records whose catalogue licence is
+unspecified. This is a POC-sharing exception, not a conclusion that every
+dataset has been cleared for unrestricted redistribution. Licence review,
+required permissions, final attribution, privacy, capacity, and production tile
+hosting remain gates before broad public promotion or a production launch.
+
+OpenFreeMap Positron remains the contextual basemap for the low-traffic POC
+showcase. The application keeps OpenFreeMap, OpenMapTiles, OpenStreetMap, and IGN
+attribution, does not prefetch or proxy tiles, and retains the neutral fallback.
+OpenFreeMap is an as-is service without an availability guarantee and is not a
+production SLA.
+
+## D-022: Reject the DREAL 2023 linear dataset from the product
+
+- Status: Accepted
+- Accepted: 2026-08-30
+
+The DREAL 2023 linear source describes portions of the regional road network,
+including highway and carriageway segments. It does not provide a defensible
+traffic series for the exact named Biarritz streets the product compares, and
+its record-level measured-versus-estimated quality is not identified.
+
+The source is therefore removed from the active catalogue, adapter registry,
+normalization and geographic contracts, audit output, visualization bundle,
+tracked public snapshot, and interface. Its local raw cache and inspection
+artifact are deleted. Historical research and implementation plans remain as a
+dated record, but they are not current product scope or active evidence.

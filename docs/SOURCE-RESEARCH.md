@@ -249,16 +249,40 @@ and off-season baseline for both streets.
 ### Strategic-noise model inputs
 
 The [Biarritz 2024 noise plan](https://www.biarritz.fr/fileadmin/mediatheque/PDF/ADMIN-2024/PPE_2024_Biarritz.pdf)
-explicitly includes Avenue de Verdun and refers to updated traffic, speed, and
-road-surface assumptions for the 2018 and 2022 map cycles. Avenue de la Gare is
-not in the exhaustive published road list. The maps publish acoustic zones, not
-the source traffic table.
+explicitly includes Avenue de Verdun and Avenue de la Marne among the municipal
+roads carrying more than 3 million vehicles per year, equivalent to more than
+about 8,200 vehicles per day. It refers to updated traffic, speed, and
+road-surface assumptions for the five-year map cycles. Avenue de la Gare is not
+in the published fourth-cycle road list. This establishes a threshold for
+Verdun and Marne, not an exact count or a trend: the maps publish acoustic zones
+rather than the traffic-input table.
 
 Biarritz and DDTM 64 should be asked for the finalized input tables and GIS
 network, including segment IDs, source year, measured or estimated status, TMJA,
 light and heavy vehicle shares, day/evening/night split, speed, and the original
-source record. This route is promising for Verdun but cannot by itself satisfy
-the mandatory comparison.
+source record. The request should cover every Biarritz road and every available
+noise-map cycle, while identifying Verdun, Marne, and Gare as priority
+corridors. This route is particularly promising for Verdun and Marne but cannot
+by itself satisfy the mandatory Verdun/Gare comparison.
+
+### 2019-2020 BAB entry-point traffic study
+
+The [Biarritz municipal council record of 25 September 2019](https://www.biarritz.fr/fileadmin/user_upload/biarritz/Ville/telechargements/Admin/COMPTE_RENDU2509.pdf)
+approved participation in the SMPBA study *Etude de circulation des portes
+d'entrée de l'agglomération du B.A.B*. Phase 1 was intended to improve the
+picture of traffic organization, distribution, and volumes around Biarritz,
+Anglet, and Bayonne entry points. The budget separately allowed EUR 30,000
+before tax for complementary counts. The named partners included SMPBA,
+Biarritz, Anglet, Bayonne, CD64, DDTM 64, DREAL, and DGITM.
+
+The Biarritz scenario work emphasized the A63 Barroilhet exit and the La
+Négresse rail crossing, so the document does not prove that either mandatory
+street was counted. It does prove that a commissioned study, count campaign,
+station inventory, model inputs, and deliverables may be held by public bodies.
+The already-submitted CAPB and Biarritz requests should be followed up, if
+needed, by naming this study and asking for its native count files, station map,
+technical report, appendices, model network, procurement deliverables, and
+reuse terms.
 
 ### Access route
 
@@ -286,10 +310,33 @@ than replaces the archive and commercial search.
 
 ### Waze
 
-The public [Waze partner feed](https://developers.google.com/waze/data-feed/overview)
-lets approved partners send incidents and closures to Waze. It is not a public
-historical traffic export. The search found no downloadable Waze count dataset
-for Biarritz.
+[Waze for Cities](https://www.waze.com/fr/wazeforcities/) is free, exposes live
+traffic and several years of historical congestion, incident, and slowdown
+data to approved public traffic or infrastructure authorities, and supports
+analysis in Google Cloud. Filigramme is not an eligible public authority merely
+because it is building this POC, and the data describes congestion, incidents,
+and speed-associated slowdowns rather than total road-counter volumes. The
+public [Waze partner feed](https://developers.google.com/waze/data-feed/overview)
+is for approved partners to send incidents and closures to Waze; it is not a
+public historical count export. No downloadable Waze count dataset for Biarritz
+was found. CAPB, SMPBA, or the City could nevertheless be asked whether it is
+already a Waze for Cities partner and whether an existing, lawfully shareable
+analysis covers the priority corridors.
+
+### Cerema AVATAR
+
+[Cerema AVATAR](https://www.data.gouv.fr/datasets/avatar-plate-forme-publique-des-donnees-de-trafic-des-gestionnaires-routiers)
+collects manager-supplied count-station data and offers charting, downloads,
+and an authenticated API. Its catalogue metadata listed 11 contributing road
+managers and did not specify a licence on 2026-08-30. A dated inspection of the
+public AVATAR map, centered on Biarritz and its immediate surroundings, showed
+no count points. A Biarritz bounding-box WFS request also required
+authentication. Creating an Orion account would not establish local coverage,
+so AVATAR is retained as a source to recheck rather than an immediate signup.
+
+Cerema's separate
+[directory of traffic open-data portals](https://trafic-routier.data.cerema.fr/acces-aux-donnees-de-trafic-routier-open-data-r25.html)
+did not list Biarritz, CAPB, SMPBA, or Département 64 on the same date.
 
 ## Other French public-data findings
 
@@ -310,13 +357,26 @@ study refers to road-count posts and mobile data, but the search found no
 downloadable record-level traffic dataset behind it. These are negative search
 results, not proof that unpublished or restricted data does not exist.
 
+[HERE Traffic Analytics](https://docs.here.com/traffic-analytics/docs/readme)
+and the live HERE Traffic API were rechecked on 2026-08-30. France is covered,
+and Traffic Analytics can return historical speed observations and probe sample
+counts from 2021 onward. Probe count is the number of contributing observations,
+not an estimate of all vehicles using the street. Access is commercial and
+requires a licensed organization. HERE therefore remains a possible short-term
+congestion corroborator, not a solution to the required historical volume
+comparison.
+
 ## Current source choice
 
 CD64 annual counts enter Phase 1 because they are official, machine-readable,
 open-licensed, and directly relevant to Biarritz. Google Routes, Google Roads,
 TrafficLayer, Waze, TomTom, and HERE do not enter the measured-count pipeline.
+The DREAL 2023 linear dataset is also excluded: its regional road segments do
+not establish exact-street evidence for the product's comparison, and its
+record-level measured-versus-estimated quality is unspecified.
 The mandatory two-street goal changes the acquisition priority. Existing 2015
-public survey files are the first request. Michelin and MyTraffic are the first
+public survey files, the 2019-2020 BAB entry-point study deliverables, and the
+noise-model input tables are the first request. Michelin and MyTraffic are the first
 commercial sample requests for passage or modeled-volume history. TomTom and
 INRIX are separate historical speed corroborators. Google Roads Management
 Insights is prospective only.

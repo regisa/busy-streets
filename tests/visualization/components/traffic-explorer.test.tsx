@@ -2,7 +2,7 @@
 
 import "@testing-library/jest-dom/vitest";
 
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
@@ -33,11 +33,12 @@ describe("TrafficExplorer", () => {
       "visually-hidden",
     );
     expect(screen.getByRole("button", { name: fr.overview })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByLabelText("Afficher les données linéaires 2023")).not.toBeChecked();
+    expect(screen.queryByText(/données linéaires/i)).not.toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: "Rechercher une rue" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "Retirer Avenue de Verdun" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "Retirer Avenue de la Marne" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "Retirer Avenue de la Gare" })).toBeVisible();
+    const selectedChips = screen.getByLabelText("Rues sélectionnées");
+    expect(within(selectedChips).getByRole("button", { name: "Retirer Avenue de Verdun" })).toBeVisible();
+    expect(within(selectedChips).getByRole("button", { name: "Retirer Avenue de la Marne" })).toBeVisible();
+    expect(within(selectedChips).getByRole("button", { name: "Retirer Avenue de la Gare" })).toBeVisible();
     expect(screen.getByRole("heading", { name: "Comparer les rues" })).toBeVisible();
     expect(screen.getAllByText(fr.noData).length).toBeGreaterThanOrEqual(3);
     expect(screen.queryByRole("button", { name: fr.compare })).not.toBeInTheDocument();
@@ -53,12 +54,13 @@ describe("TrafficExplorer", () => {
     const user = userEvent.setup();
     render(<TrafficExplorer bundle={visualizationBundleFixture()} />);
 
-    await user.click(screen.getByRole("button", { name: "Retirer Avenue de la Gare" }));
+    const selectedChips = screen.getByLabelText("Rues sélectionnées");
+    await user.click(within(selectedChips).getByRole("button", { name: "Retirer Avenue de la Gare" }));
     const input = screen.getByRole("combobox", { name: "Rechercher une rue" });
     await user.type(input, "gare du midi");
     await user.keyboard("{ArrowDown}{Enter}");
 
-    expect(screen.getByRole("button", { name: "Retirer Avenue de la Gare" })).toBeVisible();
+    expect(within(selectedChips).getByRole("button", { name: "Retirer Avenue de la Gare" })).toBeVisible();
   });
 
   test("toggles grouped streets from source and target map clicks", () => {
@@ -69,7 +71,10 @@ describe("TrafficExplorer", () => {
     act(() => mapMock.props?.onSelect({ kind: "target", id: "avenue-de-verdun" }));
     expect(screen.queryByRole("button", { name: "Retirer Avenue de Verdun" })).not.toBeInTheDocument();
     act(() => mapMock.props?.onSelect({ kind: "target", id: "avenue-de-verdun" }));
-    expect(screen.getByRole("button", { name: "Retirer Avenue de Verdun" })).toBeVisible();
+    expect(within(screen.getByLabelText("Rues sélectionnées")).getByRole(
+      "button",
+      { name: "Retirer Avenue de Verdun" },
+    )).toBeVisible();
   });
 
   test("opens station detail without clearing street comparison state", async () => {
@@ -96,9 +101,35 @@ describe("TrafficExplorer", () => {
     expect(screen.queryByRole("heading", { name: "Comparer les rues" })).not.toBeInTheDocument();
   });
 
-  test("labels unknown-quality linear evidence when enabled", () => {
+  test("removes a selected street from its comparison row", async () => {
+    const user = userEvent.setup();
     render(<TrafficExplorer bundle={visualizationBundleFixture()} />);
-    fireEvent.click(screen.getByLabelText("Afficher les données linéaires 2023"));
-    expect(screen.getByText(fr.unknownQuality)).toBeVisible();
+
+    const comparison = screen.getByRole("region", { name: "Comparer les rues" });
+    await user.click(
+      within(comparison).getByRole("button", { name: "Retirer Avenue de Verdun" }),
+    );
+
+    expect(screen.queryByRole("row", { name: /Avenue de Verdun/ })).not.toBeInTheDocument();
+    expect(mapMock.props?.selectedStreetSubjectIds).toEqual([
+      "street:marne-east",
+      "street:marne-west",
+      "street:gare",
+    ]);
   });
+
+  test("clears every selected street from the comparison header", async () => {
+    const user = userEvent.setup();
+    render(<TrafficExplorer bundle={visualizationBundleFixture()} />);
+
+    const comparison = screen.getByRole("region", { name: "Comparer les rues" });
+    await user.click(
+      within(comparison).getByRole("button", { name: "Effacer la sélection" }),
+    );
+
+    expect(screen.queryByRole("region", { name: "Comparer les rues" })).not.toBeInTheDocument();
+    expect(screen.getByText("0 rues sélectionnées")).toBeVisible();
+    expect(mapMock.props?.selectedStreetSubjectIds).toEqual([]);
+  });
+
 });

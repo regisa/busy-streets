@@ -3,15 +3,15 @@
 - As of: 2026-08-30
 - Phase: 1, data discovery
 - Current machine-audit recommendation: limited corridor or station explorer
-- Local visualization: multi-street comparison implemented, browser-verified, and production-built
+- Shareable POC: multi-street comparison implemented, browser-verified, and production-unlocked
 
 Busy Streets has a tested source catalogue, artifact acquisition path, schema
 inspector, DREAL point adapters for 2019-2023 and 2024, a CD64 latest-count point
-adapter, and a DREAL linear adapter for 2023.
-It also has the official Biarritz geographic frame, tested point and line
+adapter, and no active linear-traffic adapter.
+It also has the official Biarritz geographic frame, tested point
 classification primitives, reconciliation and continuity views, a dated
 OpenStreetMap matchability probe, and a working deterministic audit runner. It
-does not yet have adapters for the other source generations. A local-only
+does not yet have adapters for the other source generations. A limited shareable
 Next.js/MapLibre evidence explorer and deterministic visualization exporter are
 implemented. After focused desktop and mobile browser verification resolved the
 MapLibre 6 worker and viewport integration defects, the operator completed the
@@ -24,19 +24,19 @@ blocked and neither target avenue has an exact, plausible road match.
 | Area | State | Evidence or next gate |
 | --- | --- | --- |
 | Domain contracts | Implemented and verified | Zod schemas and TypeScript contracts exist in `src/traffic/contracts.ts`. Unit tests cover observation bounds and the Phase 1 interpolation ban. |
-| Source catalogue | Implemented and verified | Six required DREAL definitions cover point datasets for 2011-2015, 2015-2019, 2019-2023, and 2024, plus linear datasets for 2023 and 2024. One supplemental CD64 definition covers its latest annual count per location. |
+| Source catalogue | Implemented and verified | Five DREAL definitions cover point datasets for 2011-2015, 2015-2019, 2019-2023, and 2024, plus the still-blocked 2024 linear dataset. One supplemental CD64 definition covers its latest annual count per location. The 2023 linear dataset was rejected in D-022 and removed. |
 | Source acquisition | Implemented and verified | HTTP, WFS feature sample, WFS schema, and manual registration paths use SHA-256 content addressing and provenance metadata, including a snapshot of catalogue licence evidence. Tests cover HTML fallback, deduplication, manual registration, and WFS CRS provenance. Further licence research remains planned. |
 | Dataset inspection | Implemented and verified | GeoJSON and zipped Shapefile inspection reports fields, inferred types, null counts, representative values, geometry, CRS, and encoding. WFS inspection merges declared fields from `DescribeFeatureType` with sampled statistics. Tests cover malformed or incomplete ZIP files, missing CRS evidence, projected CRS identification, missing encoding evidence, and explicit encoding overrides. |
-| Source adapters | Partly implemented and verified | Version 1 adapters for `dreal-2019-2023-point`, `dreal-2023-linear`, `dreal-2024-point`, and `cd64-latest-road-counts-point` read immutable GeoJSON source records and map their inspected schemas. Other source generations remain unimplemented or blocked. |
-| Normalization | Partly implemented and verified | The point adapters emit source-scoped stations and measured annual observations. The CD64 adapter retains unknown counter type because its record schema does not identify permanent versus rotating counters. The 2023 linear adapter derives vehicles per day from `veh_km / long_km` and marks every observation `unknown` because the source does not identify measured and estimated records separately. Adapters preserve missing values, reject invalid evidence with attributable issues, and never interpolate. |
-| Biarritz geography | Implemented and verified | The official `64122` MultiPolygon is validated and retained in a gitignored SHA-256 cache with parser version and dated ODbL evidence. A deterministic 2 km buffer supports boundary-inclusive point scope, line intersection and municipality-length metrics, and the strict buffer-only ingress rule. An immutable derived view applies this frame to stations, observations, and linear records without changing normalized source evidence. |
+| Source adapters | Partly implemented and verified | Version 1 adapters for `dreal-2019-2023-point`, `dreal-2024-point`, and `cd64-latest-road-counts-point` read immutable GeoJSON source records and map their inspected schemas. Other source generations remain unimplemented or blocked. |
+| Normalization | Partly implemented and verified | The point adapters emit source-scoped stations and measured annual observations. The CD64 adapter retains unknown counter type because its record schema does not identify permanent versus rotating counters. Adapters preserve missing values, reject invalid evidence with attributable issues, and never interpolate. |
+| Biarritz geography | Implemented and verified | The official `64122` MultiPolygon is validated and retained in a gitignored SHA-256 cache with parser version and dated ODbL evidence. A deterministic 2 km buffer supports boundary-inclusive point scope and the strict buffer-only ingress rule. An immutable derived view applies this frame to stations and observations without changing normalized source evidence. |
 | Reconciliation and continuity | Implemented and verified | The derived reconciliation view retains source links, resolves quality and publication precedence, excludes equal-authority conflicts from comparisons, and forbids interpolated input. Continuity scoring implements the accepted 150 m gate, evidence weights, thresholds, name normalization, and hard road-reference conflict. A dated local-only Biarritz check is recorded below. |
 | OSM matchability probe | Implemented and verified | A content-addressed Overpass acquisition records query bounds, checksum, OSM base time, and ODbL evidence and rejects partial responses carrying runtime remarks. Parsing retains supported non-degenerate motor-road ways. A snapshot-scoped result envelope and matching implement the accepted search radii, evidence weights, hard reference rejection, full-precision thresholds, and deterministic ordering. A dated local Biarritz probe is recorded below. |
 | Audit summary, runner, and CLI | Partly implemented and verified | The runner orchestrates the official boundary, supported source adapters, geographic scope, in-scope continuity and reconciliation, and the dated OSM probe. `traffic:audit --as-of YYYY-MM-DD` writes deterministic summary JSON. `traffic:inspect` remains operational; `traffic:register` and `traffic:verify` remain unimplemented. |
 | Machine summary and human report | Partly implemented and verified | A gitignored machine summary was generated twice from the live sources with byte-identical output. The English human report remains pending and will not be generated until its claims can be reviewed against the summary and open blockers. |
-| Visualization bundle | Implemented and statically verified | `traffic:visualize` combines the audit snapshot with IGN BD TOPO reference streets. Two live runs were byte-identical. The gitignored bundle contains 2,603 named street subjects, 7 station groups, 12 clipped linear records, both pending target corridors, and zero traffic-to-street assignments. |
-| Local web application | Implemented and verified locally | A French Next.js/MapLibre interface provides an attributed OpenFreeMap Positron OSM-derived contextual basemap, IGN evidence geometry, overview and year controls, fuzzy grouped-street selection for up to ten streets, an accepted-only automatic year matrix, optional uncertain linear evidence, station history, provenance, and same-location comparison. Focused desktop and 390 × 844 checks cover the new autocomplete and comparison layout, and the operator completed the final `pnpm build`. |
-| Database and public release | Deferred | No database, deployment, publication, or production road identity exists. Local evidence is refused in production runtime. |
+| Visualization bundle | Implemented and statically verified | `traffic:visualize` combines the point-evidence audit snapshot with IGN BD TOPO reference streets. The regenerated local and public bundles are byte-identical and contain 2,603 named street subjects, 7 station groups, both pending target corridors, zero traffic-to-street assignments, and no linear records. |
+| Local web application | Implemented and verified locally | A French Next.js/MapLibre interface provides an attributed OpenFreeMap Positron OSM-derived contextual basemap, IGN evidence geometry, overview and year controls, fuzzy grouped-street selection for up to ten streets, an accepted-only automatic year matrix, station history, provenance, and same-location comparison. Focused desktop and 390 × 844 checks cover the autocomplete and comparison layout. |
+| Database and broader release | Partly deferred | No database or production road identity exists. Production now loads a tracked complete visualization snapshot for limited POC sharing. DREAL catalogue licences remain unspecified, so licence review and any required permissions remain mandatory before broad promotion. |
 
 ## Fresh verification
 
@@ -44,8 +44,8 @@ The following checks passed on 2026-08-30:
 
 ```text
 pnpm test
-Test Files  38 passed (38)
-Tests       255 passed (255)
+Test Files  37 passed (37)
+Tests       234 passed (234)
 
 pnpm typecheck
 Exit code 0
@@ -64,10 +64,11 @@ Focused verification against the operator-run `pnpm dev` instance at
 - direct map selection and the complete named-street selector open consistent
   detail sheets;
 - Avenue de Verdun and Avenue de la Gare remain explicit priority corridors
-  with `Correspondance à vérifier`, `Comparaison indisponible`, and
-  `Aucune donnée` states;
-- the optional 2023 linear layer starts hidden and exposes
-  `Qualité indéterminée` when enabled;
+  with `Comparaison indisponible` and `Aucune donnée` states; internal
+  matchability warnings are not repeated as interface badges;
+- the desktop header gives equal width to wrapped year controls and street
+  search, without a horizontal year scroller;
+- no 2023 linear-layer control or segment evidence is present;
 - the inside-municipality D810 group displays measured 2021-2024 history,
   source provenance, and a 2021-to-2024 comparison of +3,070 vehicles per day
   and +9.4%;
@@ -92,11 +93,11 @@ Result: 10 Point features, EPSG:4326, UTF-8, 14 inspected fields
 
 These checks verify the current contracts, catalogue, acquisition, inspection,
 inspection and audit commands, immutable GeoJSON source records, all three point
-adapters, the 2023 linear adapter, deterministic audit-summary construction, and
+adapters, deterministic audit-summary construction, and
 audit-runner orchestration. They also
 verify Biarritz boundary acquisition,
-deterministic buffering, boundary-inclusive point classification, line
-intersection and length calculations, polygon-hole handling, and the ingress
+deterministic buffering, boundary-inclusive point classification,
+polygon-hole handling, and the ingress
 candidate guard. Geographic projection tests cover observations that precede
 their station, buffer-only and outside scope propagation, duplicate station IDs,
 and observations that cannot be scoped. Bounded WFS tests cover WFS 2.0
@@ -112,11 +113,11 @@ They do not verify adapters for the three unsupported DREAL source generations.
 Visualization tests cover IGN WFS pagination and deterministic acquisition,
 connected named-street subjects, exact Verdun and Gare corridor extraction,
 bundle invariants, source links, coordinate validity, the interpolation ban,
-linear clipping, deterministic serialization, local-only loading, fixed map
+deterministic serialization, local-only loading, fixed map
 source/layer order, hover and multi-street selection state, normalized-name
 grouping, fuzzy search and aliases, the ten-street cap, accepted-only comparison
-rows, explicit no-data cells, independent counter rows, overview and layer
-controls, French detail views, accessibility labels, provenance, and
+rows, explicit no-data cells, independent counter rows, overview controls,
+French detail views, accessibility labels, provenance, and
 same-location comparison including a zero baseline. The earlier browser checks
 above were supplemented on 2026-08-30 by a focused multi-street pass against the
 operator-run development server. It confirmed the three default streets,
@@ -143,13 +144,13 @@ result envelopes.
 
 `pnpm traffic:visualize --as-of 2026-08-29` completed twice on 2026-08-30
 with byte-identical output. The gitignored bundle SHA-256 is
-`fc9f63f15776bf9a976f38df3ce829f43f3393577e76076bb4443d25f8051902`.
+`b15f98c0217f49e901fd2fb744d6bc6910b4afc07414a1857faf47b20c42be2c`.
 Its IGN BD TOPO artifact SHA-256 is
 `a459dbddf031ea28a2a527ca279725ea5f2e75a5ee5bfb74a457077a9a41af48`.
 
-The bundle contains 2,603 named street subjects, 7 station groups, and 12
-linear records clipped to the display buffer. It extracts one connected street
-subject for Avenue de Verdun and one for Avenue de la Gare. Both target
+The bundle contains 2,603 named street subjects and 7 station groups, with no
+linear-record collection. It extracts one connected street subject for Avenue
+de Verdun and one for Avenue de la Gare. Both target
 corridors remain `pending` operator geometry review. There are zero accepted or
 candidate traffic-to-street assignments, so neither target displays a traffic
 series or comparison. These counts describe this dated local bundle, not a
@@ -178,8 +179,8 @@ runs produced byte-identical gitignored summaries with SHA-256
 `da01b99a664715aab0f30bc87258316689d948bb77ca0220c40ccb911bdc5d3a`.
 Acquisition timestamps remain in provenance rather than the summary.
 
-Four catalogue sources were audited: the 2019-2023 and 2024 DREAL point
-sources, the 2023 DREAL linear source, and the latest CD64 point export. The
+Three catalogue sources were audited: the 2019-2023 and 2024 DREAL point
+sources and the latest CD64 point export. The
 2011-2015 point, 2015-2019 point, and 2024 linear sources are explicitly
 blocked because their adapters are not implemented. This is a software blocker,
 not evidence that those datasets contain no usable Biarritz records.
@@ -192,10 +193,8 @@ in-scope station records produced 7 probable continuity pairs, 18 canonical
 annual comparison groups, and 12 ambiguous OSM matches. There were no plausible
 or unmatched in-scope OSM results under the accepted thresholds.
 
-Across all retained point and line source evidence, the summary records 834
-annual observations: 292 measured point observations and 542 linear
-observations of unknown quality. The 542 linear records include 78 commune
-intersections. These counts are evidence coverage, not a deduplicated road
+Across all retained source evidence, the summary records 292 measured point
+observations. These counts are evidence coverage, not a deduplicated road
 network and not a citywide traffic total.
 
 The current rule-based recommendation is `limited-corridor-or-station-explorer`
@@ -218,7 +217,6 @@ builder now encodes that rule.
 | --- | ---: | ---: | ---: | ---: | --- |
 | `dreal-2019-2023-point` | 3 stations | 1 station | 2 stations | 0 stations | 11 measured annual observations |
 | `dreal-2024-point` | 3 stations | 1 station | 2 stations | 0 stations | 3 measured annual observations |
-| `dreal-2023-linear` | 542 line records | 78 intersect the commune | 387 intersect the buffer | 155 line records | 542 annual observations with `unknown` quality |
 
 All six point records describe permanent counters. In the 2019-2023 source,
 the two buffer-only stations each have measured observations for 2019, 2021,
@@ -227,12 +225,9 @@ the two buffer-only stations each have measured observations for 2019, 2021,
 No point observation was emitted for 2020 because the inspected traffic fields
 remain empty.
 
-The 2023 linear records contain about 6.402535 km of summed geometry inside the
-commune. This is a segment-overlap diagnostic, not the length of a deduplicated
-road network and not a citywide traffic total. Buffer-only stations are not
-ingress candidates until a later plausible-corridor assessment proves that a
-road crosses the commune boundary. All three runs completed without a
-normalization or geographic-classification issue.
+Buffer-only stations are not ingress candidates until a later plausible-corridor
+assessment proves that a road crosses the commune boundary. The point-source
+runs completed without a normalization or geographic-classification issue.
 
 The source licences remain unspecified. Raw responses and record-level derived
 evidence stay in the gitignored cache. The table retains aggregate audit
@@ -306,34 +301,17 @@ sample. The adapter classified 745 route values as formal road references and
 255 as road names. These regional sample counts are not Biarritz coverage
 counts and are not a complete-dataset result.
 
-A bounded normalization check used the first 1,000 records returned by the
-official 2023 linear WFS on 2026-08-29. It produced 1,000 linear records without
-a normalization issue. All observations have `unknown` quality. In the sample,
-`veh_km / long_km` ranged from about 130 to 24,766 vehicles per day and was
-within 0.0004 of an integer for every record. The conversion follows the
-[CEREMA definition of vehicle-kilometres](https://dtrf.cerema.fr/pdf/pj/Dtrf/0001/Dtrf-0001924/DT1924.pdf?openerPage=notice),
-where traffic volume is flow multiplied by network length. This is a unit
-conversion, not interpolation. The derived value fell outside `tmja_class` for
-66 records. Doubling it brought 64 of those records into the published band,
-mostly on divided roads, roundabouts, and autoroutes. This suggests directional
-or carriageway-level segmentation that the exposed fields do not explain. The
-adapter therefore preserves the segment-level quotient and `unknown` quality;
-it does not treat the result as a canonical road-level total. The sample does
-not establish whether any record was measured or estimated, and it is not a
-Biarritz coverage or complete-dataset result.
-
-All four current official WFS sources completed the same bounded inspection on
+Three current official WFS sources completed the same bounded inspection on
 2026-08-29:
 
 | Source ID | Sample records | Geometry | Declared fields |
 | --- | ---: | --- | ---: |
 | `dreal-2019-2023-point` | 10 | Point | 22 |
-| `dreal-2023-linear` | 10 | LineString | 14 |
 | `dreal-2024-point` | 10 | Point | 14 |
 | `dreal-2024-linear` | 10 | LineString | 10 |
 
 These are schema and sample-inspection counts, not Biarritz coverage counts.
-The resulting inspection files remain local because all four catalogue licences
+The resulting inspection files remain local because the DREAL catalogue licences
 are unspecified.
 
 ## CD64 latest-count check
@@ -368,7 +346,7 @@ redistribution.
 
 ## Official source access findings
 
-The [source catalogue](../src/traffic/source-catalog.ts) contains six official
+The [source catalogue](../src/traffic/source-catalog.ts) contains five official
 DREAL Nouvelle-Aquitaine sources and one supplemental CD64 source. Current
 research found that the SIGENA download links return an HTML application rather
 than a stable dataset file. The acquisition layer treats HTML as manual input
@@ -379,7 +357,6 @@ instead of accepting it as data. The CD64 API provides a stable GeoJSON export.
 | `dreal-2011-2015-point` | Open Licence 2.0 | WMS rendering only; no downloadable artifact or WFS schema confirmed | Blocked/manual input |
 | `dreal-2015-2019-point` | Open Licence 2.0 | No downloadable artifact or feature API confirmed | Blocked/manual input |
 | `dreal-2019-2023-point` | Not specified | The [official description](https://www.data.gouv.fr/datasets/nouvelle-aquitaine-trafic-routier-2019-2023-des-reseaux-autoroutiers-non-concede-national-et-departemental-localisation-ponctuel) defines the three counter types and identifies annual TMJA and heavy-vehicle share as measurements; the WFS exposes the corresponding 2019-2023 fields | Version 1 WFS adapter and bounded Biarritz-plus-buffer check verified; licence evidence pending |
-| `dreal-2023-linear` | Not specified | The [official description](https://www.data.gouv.fr/datasets/nouvelle-aquitaine-trafic-routier-2023-du-reseau-autoroutier-concede-du-reseau-national-et-departemental-lineaire) says missing traffic is estimated. The WFS exposes `veh_km`, `long_km`, `pc_pl`, and a traffic band, but no record-level measured/estimated flag. | Version 1 WFS adapter with `unknown` quality and bounded Biarritz-plus-buffer check verified; licence evidence pending |
 | `dreal-2024-point` | Not specified | The [official description](https://www.data.gouv.fr/datasets/nouvelle-aquitaine-trafic-routier-2024-des-reseaux-autoroutiers-non-concede-national-et-departemental-localisation-ponctuel) identifies TMJA and heavy-vehicle share as station measurements and defines permanent, rotating, and occasional counters; WFS inspection exposes the corresponding fields | Version 1 WFS adapter and bounded Biarritz-plus-buffer check verified; licence evidence pending |
 | `dreal-2024-linear` | Not specified | The [official description](https://www.data.gouv.fr/datasets/nouvelle-aquitaine-trafic-routier-2024-du-reseau-autoroutier-concede-du-reseau-national-et-du-reseau-departemental-lineaire) says missing traffic is estimated. The WFS exposes a traffic band but no exact numeric TMJA, heavy-vehicle percentage, or record-level measured/estimated flag. | Blocked for exact traffic values; redistribution blocked pending licence evidence |
 | `cd64-latest-road-counts-point` | Open Licence 2.0 | Stable official GeoJSON with annual MJA, heavy-vehicle count and share, road, PR, commune, INSEE code, and point geometry | Version 1 adapter, complete-source inspection, and normalization verified; geographic reconciliation pending |
@@ -394,15 +371,22 @@ annual-count pipeline.
 The intended product must compare Avenue de Verdun and Avenue de la Gare. The
 retained DREAL and CD64 evidence does not currently assign an annual traffic
 series to either street. Current OSM geometry identifies both corridors, but OSM
-does not supply traffic values. Nearby D810 point and linear evidence cannot be
-presented as either avenue.
+does not supply traffic values. Nearby D810 point evidence cannot be presented
+as either avenue.
 
-Research on 2026-08-29 found two credible acquisition paths, neither yet
+Research through 2026-08-30 found several credible acquisition paths, none yet
 verified for both streets:
 
 - archived public files may exist behind the 2015 STACBA/AUDAP summer and
-  off-season traffic survey, which used 165 count stations, and behind the 2018
-  and 2022 Biarritz strategic-noise models;
+  off-season traffic survey, which used 165 count stations;
+- the 2019-2020 SMPBA BAB entry-point study expressly budgeted complementary
+  counts and sought a better picture of traffic volumes; its public record does
+  not identify the counted streets;
+- the Biarritz strategic-noise inputs should contain road-segment traffic
+  assumptions for successive map cycles. The published fourth-cycle plan proves
+  that Avenue de Verdun and Avenue de la Marne exceeded the 3-million-vehicle
+  annual inclusion threshold, about 8,200 vehicles per day, but publishes no
+  exact values and does not list Avenue de la Gare;
 - Michelin Mobility Intelligence and MyTraffic advertise street-segment vehicle
   passage or volume products in France. Their public material does not prove the
   historical depth, sample quality, or exact coverage of both target streets.
@@ -413,6 +397,15 @@ products can corroborate congestion change if both streets have adequate probe
 coverage, but speed is not vehicle volume. HERE has a shorter archive beginning
 in 2021. Google Roads Management Insights accumulates only after onboarding and
 cannot reconstruct the historical comparison.
+
+Cerema AVATAR was also checked on 2026-08-30. The public Biarritz map view
+showed no count points, its WFS required authentication, and its data.gouv.fr
+record did not specify a licence. Cerema's directory of open traffic portals
+did not list a local Biarritz, CAPB, SMPBA, or Département 64 portal. Waze for
+Cities is free for eligible public authorities and can expose historical
+congestion and incident evidence, but Filigramme is not the road authority and
+the product does not provide total vehicle counts. These sources therefore do
+not remove the current street-level data gap.
 
 On 2026-08-29, operator-approved exact-street sample and quote requests were
 submitted through the official Michelin Mobility Intelligence and MyTraffic
@@ -429,6 +422,14 @@ broader request is too costly to process. The requests also ask for station and
 segment inventories, measurement methods, quality evidence, metadata, and reuse
 conditions. AUDAP and DDTM 64 have not yet been contacted directly.
 
+If the first responses are incomplete, the follow-up should name the 2019-2020
+*Etude de circulation des portes d'entrée de l'agglomération du B.A.B*, its
+complementary count campaign, the 2015 PDU and summer-mobility surveys, and the
+input tables for each Biarritz strategic-noise cycle. The request should ask for
+existing native files and appendices rather than a new analysis. It should also
+ask whether CAPB, SMPBA, or Biarritz already participates in Waze for Cities and
+holds a shareable historical analysis for the priority corridors.
+
 The POC has a total external data and service budget of EUR 100 including VAT.
 Free evidence remains the default. Any purchase remains blocked until both
 street geometries, at least three comparable historical periods, methodology,
@@ -437,20 +438,16 @@ procurement test. A quote above the budget cannot proceed.
 
 ## What the retained evidence can support now
 
-The current evidence can support the Phase 1 audit and three bounded
+The current evidence can support the Phase 1 audit and two bounded
 demonstrations:
 
-- a source and coverage map showing retained official point stations and 2023
-  line records inside Biarritz and its separate 2 km buffer;
+- a source and coverage map showing retained official point stations inside
+  Biarritz and its separate 2 km buffer;
 - one probable continuous point-counter series for 2021, 2022, 2023, and 2024,
-  with the 2022 CD64 record reconciled as a duplicate value;
-- a 2023 road-segment snapshot with `unknown` quality, accompanied by visible
-  gaps, provenance, and warnings against treating it as a citywide total.
+  with the 2022 CD64 record reconciled as a duplicate value.
 
 The point series cannot yet be assigned to Avenue de Verdun, Avenue de la Gare,
 or another production road identity. The OSM probe found only ambiguous matches.
-The 2023 line source provides one year, mixes measured and estimated evidence
-without a record-level flag, and cannot show change over time.
 
 The retained evidence therefore cannot yet support the mandatory comparison of
 the two avenues, a citywide traffic trend, a citywide traffic total, or a claim
@@ -461,8 +458,6 @@ The accessible official WFS capabilities and layer names are:
 
 - [2019-2023 point WFS](https://datacarto.sigena.fr/wfs/5f0e7e36-dc34-4983-903a-e1a27f570d90?service=WFS&request=GetCapabilities),
   layer `ms:l_comptage_trafic_p_r75`;
-- [2023 linear WFS](https://datacarto.sigena.fr/wfs/31e35ea7-c328-4411-ae8f-306ca536678a?service=WFS&request=GetCapabilities),
-  layer `ms:l_tmja2023_l_r74`;
 - [2024 point WFS](https://datacarto.sigena.fr/wfs/c19722dc-3abf-4cb1-a539-eb3d759b202e?service=WFS&request=GetCapabilities),
   layer `ms:l_tmja_2024_p_r75`;
 - [2024 linear WFS](https://datacarto.sigena.fr/wfs/79905218-085a-441f-8492-3003eea64fef?service=WFS&request=GetCapabilities),
@@ -497,7 +492,7 @@ valid `.shx` or `.prj`. It also rejects a bundle without `.cpg` encoding
 evidence unless the operator passes the known encoding explicitly with
 `--encoding`. Manual registration alone does not perform that inspection.
 
-Manual files stay in the gitignored, content-addressed cache. Data from the four
+Manual files stay in the gitignored, content-addressed cache. Data from the three
 sources with an unspecified catalogue licence stays local unless later licence
 evidence permits redistribution.
 

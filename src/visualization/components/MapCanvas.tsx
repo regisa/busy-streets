@@ -20,7 +20,6 @@ export interface MapCanvasProps {
   readonly selectedStreetSubjectIds: readonly string[];
   readonly focusedSelection: MapSelection | null;
   readonly year: number | "overview";
-  readonly linearTrafficVisible: boolean;
   readonly onSelect: (selection: MapSelection) => void;
 }
 
@@ -29,7 +28,6 @@ export function MapCanvas({
   selectedStreetSubjectIds,
   focusedSelection,
   year,
-  linearTrafficVisible,
   onSelect,
 }: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -79,7 +77,6 @@ export function MapCanvas({
         });
         controllerRef.current = controller;
         controller.setYear(year);
-        controller.setLinearTrafficVisible(linearTrafficVisible);
         controller.setStreetSelection(selectedStreetSubjectIds);
         controller.setFocusedSelection(focusedSelection);
       };
@@ -97,10 +94,6 @@ export function MapCanvas({
   }, [bundle, onSelect]);
 
   useEffect(() => controllerRef.current?.setYear(year), [year]);
-  useEffect(
-    () => controllerRef.current?.setLinearTrafficVisible(linearTrafficVisible),
-    [linearTrafficVisible],
-  );
   useEffect(
     () => controllerRef.current?.setStreetSelection(selectedStreetSubjectIds),
     [selectedStreetSubjectIds],

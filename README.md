@@ -10,19 +10,19 @@ comparison. The project is now also investigating archived public studies and
 commercial street-level data, with a strict sample-before-purchase gate.
 The total external data and service budget for the POC is EUR 100 including VAT.
 
-The evidence programme remains in Phase 1: data discovery. A local-only
-Next.js and MapLibre prototype now visualizes the evidence already available
+The evidence programme remains in Phase 1: data discovery. A limited shareable
+Next.js and MapLibre POC now visualizes the evidence already available
 over an attributed OpenFreeMap Positron OSM-derived contextual basemap;
-it is not a public release, production road network, or claim that the two
+it is not a production road network or a claim that the two
 mandatory streets have comparable history. There is no database. The current
 code defines the traffic-data contracts,
-catalogues six DREAL Nouvelle-Aquitaine sources and one open-licensed CD64
+catalogues five DREAL Nouvelle-Aquitaine sources and one open-licensed CD64
 source, acquires official WFS samples and stable GeoJSON resources,
 and acquires `DescribeFeatureType` schemas or manual artifacts. It produces deterministic
 schema inspections, and normalizes the inspected 2019-2023 and 2024
-point-counter schemas plus the numeric evidence in the 2023 linear schema. It
-also acquires and validates the official Biarritz boundary, derives the separate
-2 km buffer, and provides tested point and line geographic classification. A
+point-counter schemas plus the CD64 latest-count schema. It also acquires and
+validates the official Biarritz boundary, derives the separate 2 km buffer, and
+provides tested point geographic classification. A
 derived reconciliation view and station-continuity scorer implement the
 accepted evidence precedence, conflict, distance, and match-threshold rules. A
 dated, non-production OpenStreetMap probe assesses current in-scope point
@@ -90,6 +90,12 @@ Generate the deterministic, gitignored visualization bundle:
 pnpm traffic:visualize --as-of 2026-08-29
 ```
 
+Refresh the tracked production snapshot from that validated bundle:
+
+```sh
+pnpm traffic:visualize:public
+```
+
 Then, under operator control, verify and run the local application:
 
 ```sh
@@ -97,17 +103,19 @@ pnpm build
 pnpm dev
 ```
 
-The application reads
-`artifacts/traffic/visualization/biarritz.json` only in development. A
-production runtime refuses local evidence rather than publishing data whose
-release rights have not been approved.
+Development reads `artifacts/traffic/visualization/biarritz.json`. Production
+reads the complete tracked snapshot at
+`data/traffic/biarritz.public.json`. The snapshot is suitable for the current
+limited POC showcase, but it contains DREAL-derived evidence whose catalogue
+licence remains unspecified. Complete licence review and any required
+permissions remain mandatory before broad public promotion.
 
 The local POC uses OpenFreeMap's Positron vector style for a quiet map context
 and displays the provider, OpenMapTiles, OpenStreetMap, and IGN attribution. A
 neutral local style keeps the evidence canvas usable if the remote style cannot
 load. The POC does not prefetch or package tiles for offline use. OpenFreeMap's
-public instance has no SLA; a public release must choose and approve its own
-production tile provider rather than assume continued use of the service.
+public instance has no SLA. It is accepted for the current low-traffic POC
+showcase, not as a guaranteed production tile service.
 
 Run the dated Biarritz audit:
 

@@ -83,10 +83,10 @@ describe("source acquisition", () => {
   });
 
   test("registers a manual file with its source provenance", async () => {
-    const source = DREAL_TRAFFIC_SOURCES[3];
+    const source = DREAL_TRAFFIC_SOURCES[4];
     const cacheDirectory = await temporaryDirectory();
     const suppliedDirectory = await temporaryDirectory();
-    const suppliedPath = join(suppliedDirectory, "linear-2023.zip");
+    const suppliedPath = join(suppliedDirectory, "linear-2024.zip");
     const { writeFile } = await import("node:fs/promises");
     await writeFile(suppliedPath, new Uint8Array([0x50, 0x4b, 0x03, 0x04, 9]));
 
@@ -95,9 +95,9 @@ describe("source acquisition", () => {
       now: () => "2026-08-29T10:00:00.000Z",
     });
 
-    expect(result.artifact.sourceId).toBe("dreal-2023-linear");
+    expect(result.artifact.sourceId).toBe("dreal-2024-linear");
     expect(result.artifact.sourceUrl).toBe(source.datasetUrl);
-    expect(result.artifact.originalFilename).toBe("linear-2023.zip");
+    expect(result.artifact.originalFilename).toBe("linear-2024.zip");
     expect(result.artifact).toHaveProperty("license", source.license);
     expect(result.localPath).toContain(result.artifact.sha256);
   });

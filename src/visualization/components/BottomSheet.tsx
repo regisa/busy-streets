@@ -24,11 +24,11 @@ export function BottomSheet({
       </header>
       {detail.kind === "station" ? (
         <>
-          {detail.group.issues.map((issue) => (
+          {detail.group.issues
+            .filter((issue) => issue.code !== "osm-match-ambiguous")
+            .map((issue) => (
             <p className="evidence-label" key={`${issue.code}:${issue.message}`}>
-              {issue.code === "osm-match-ambiguous"
-                ? "Correspondance routière ambiguë"
-                : issue.message}
+              {issue.message}
             </p>
           ))}
           <AnnualHistory observations={detail.group.observations} />
@@ -46,13 +46,11 @@ export function BottomSheet({
         </>
       ) : detail.kind === "target" ? (
         <div className="empty-detail">
-          <p className="evidence-label">{fr.candidateReview}</p>
           <p>{fr.comparisonUnavailable}</p>
           <p>{fr.noData}</p>
         </div>
       ) : (
         <div className="empty-detail">
-          {detail.candidateReview ? <p className="evidence-label">{fr.candidateReview}</p> : null}
           {detail.acceptedStationGroup ? (
             <AnnualHistory observations={detail.acceptedStationGroup.observations} />
           ) : (

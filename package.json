@@ -21,6 +21,7 @@
     "traffic:inspect": "tsx scripts/traffic/cli.ts inspect",
     "traffic:register": "tsx scripts/traffic/cli.ts register",
     "traffic:visualize": "tsx scripts/traffic/cli.ts visualize",
+    "traffic:visualize:public": "tsx scripts/traffic/export-public-visualization.ts",
     "traffic:verify": "tsx scripts/traffic/cli.ts verify",
     "typecheck": "tsc --noEmit"
   },

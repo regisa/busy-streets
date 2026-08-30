@@ -4,11 +4,6 @@ import { loadLocalVisualizationBundle } from "../visualization/load-local-bundle
 import { fr } from "../visualization/messages/fr";
 import { TrafficExplorer } from "../visualization/components/TrafficExplorer";
 
-const bundlePath = resolve(
-  process.cwd(),
-  "artifacts/traffic/visualization/biarritz.json",
-);
-
 export default async function HomePage() {
   const runtime =
     process.env.NODE_ENV === "production"
@@ -16,18 +11,25 @@ export default async function HomePage() {
       : process.env.NODE_ENV === "test"
         ? "test"
         : "development";
+  const bundlePath = resolve(
+    process.cwd(),
+    runtime === "production"
+      ? "data/traffic/biarritz.public.json"
+      : "artifacts/traffic/visualization/biarritz.json",
+  );
   const result = await loadLocalVisualizationBundle({
     path: bundlePath,
     runtime,
   });
 
-  if (result.status === "disabled") {
-    return <UnavailableState title={fr.appTitle} message={fr.disabledData} />;
-  }
   if (result.status === "missing") {
     return (
       <UnavailableState title={fr.appTitle} message={fr.missingData}>
-        <code>pnpm traffic:visualize --as-of 2026-08-29</code>
+        <code>
+          {runtime === "production"
+            ? "pnpm traffic:visualize:public"
+            : "pnpm traffic:visualize --as-of 2026-08-29"}
+        </code>
       </UnavailableState>
     );
   }

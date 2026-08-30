@@ -92,32 +92,6 @@ function fixture(): {
       geographicScope: "inside-municipality" as const,
     },
   ];
-  const linear = {
-    kind: "linear-traffic" as const,
-    id: "linear:2023:one",
-    sourceId: "dreal-2023-linear",
-    sourceRecordId: "record:linear",
-    geometry: {
-      type: "LineString" as const,
-      coordinates: [[-1.58, 43.48], [-1.52, 43.48]],
-    },
-    observation: {
-      id: "observation:linear",
-      sourceRecordId: "record:linear",
-      sourceGeometryId: "linear:2023:one",
-      year: 2023,
-      periodType: "annual" as const,
-      vehiclesPerDay: 10_000,
-      heavyVehiclePercent: null,
-      quality: "unknown" as const,
-      sourceId: "dreal-2023-linear",
-    },
-    geographicCoverage: {
-      municipalityIntersects: true,
-      bufferIntersects: true,
-      lengthInsideMunicipalityKilometers: 1,
-    },
-  };
   const audit: AuditEvidenceSnapshot = {
     config: {
       asOf: "2026-08-29",
@@ -134,10 +108,9 @@ function fixture(): {
     },
     sources: [
       { sourceId: "dreal-2024-point", status: "audited", artifactId: "a:2024" },
-      { sourceId: "dreal-2023-linear", status: "audited", artifactId: "a:linear" },
       { sourceId: "dreal-2019-2023-point", status: "audited", artifactId: "a:2023" },
     ],
-    evidence: [linear, ...stations].reverse(),
+    evidence: [...stations].reverse(),
     inScopeStations: [...stations].reverse(),
     stationGroups: [{ id: groupId, memberStationIds: ["station:2023", "station:2024"] }],
     continuityCandidates: [],
@@ -252,14 +225,6 @@ describe("visualization bundle builder", () => {
       "avenue-de-verdun",
     ]);
     expect(first.streetAssignments).toEqual([]);
-  });
-
-  test("clips linear display geometry to the buffer and retains record identity", () => {
-    const input = fixture();
-    const bundle = buildVisualizationBundle({ ...input, assignments: [] });
-    expect(bundle.linearRecords[0]?.id).toBe("linear:2023:one");
-    const coordinates = bundle.linearRecords[0]?.geometry.coordinates;
-    expect(JSON.stringify(coordinates)).not.toContain("-1.58");
-    expect(JSON.stringify(coordinates)).not.toContain("-1.52");
+    expect(first).not.toHaveProperty("linearRecords");
   });
 });

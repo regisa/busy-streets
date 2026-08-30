@@ -8,6 +8,7 @@ export const fr = {
   noStreetResult: "Aucune rue trouvée",
   streetLimit: "10 rues maximum",
   removeStreet: (name: string) => `Retirer ${name}`,
+  clearStreetSelection: "Effacer la sélection",
   streetComparisonTitle: "Comparer les rues",
   collapseComparison: "Réduire la comparaison",
   selectedStreetCount: (count: number) => `${count} rues sélectionnées`,
@@ -20,9 +21,7 @@ export const fr = {
   unknownQuality: "Qualité indéterminée",
   noData: "Aucune donnée",
   comparisonUnavailable: "Comparaison indisponible",
-  candidateReview: "Correspondance à vérifier",
   dataAvailable: "Données disponibles",
   invalidData: "Les données locales ne peuvent pas être chargées",
   missingData: "Générez d'abord les données locales de visualisation.",
-  disabledData: "Les données locales sont désactivées hors développement.",
 } as const;

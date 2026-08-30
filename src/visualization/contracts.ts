@@ -16,10 +16,6 @@ const pointSchema = z.object({
   type: z.literal("Point"),
   coordinates: positionSchema,
 });
-const lineStringSchema = z.object({
-  type: z.literal("LineString"),
-  coordinates: lineCoordinatesSchema,
-});
 const multiLineStringSchema = z.object({
   type: z.literal("MultiLineString"),
   coordinates: z.array(lineCoordinatesSchema).min(1),
@@ -95,16 +91,6 @@ const stationGroupSchema = z.object({
   issues: z.array(auditIssueSchema),
 });
 
-const linearRecordSchema = z.object({
-  id: z.string().min(1),
-  sourceId: z.string().min(1),
-  sourceRecordId: z.string().min(1),
-  geometry: z.union([lineStringSchema, multiLineStringSchema]),
-  roadRef: z.string().min(1).optional(),
-  roadName: z.string().min(1).optional(),
-  observation: annualObservationSchema,
-});
-
 const streetSubjectSchema = z.object({
   id: z.string().min(1),
   displayName: z.string().min(1),
@@ -152,7 +138,6 @@ export const visualizationBundleSchema = z
     buffer: z.union([polygonSchema, multiPolygonSchema]),
     sources: z.array(sourceSchema),
     stationGroups: z.array(stationGroupSchema),
-    linearRecords: z.array(linearRecordSchema),
     streetSubjects: z.array(streetSubjectSchema),
     targetCorridors: z.array(targetCorridorSchema).length(2),
     streetAssignments: z.array(streetTrafficAssignmentSchema),
@@ -161,7 +146,6 @@ export const visualizationBundleSchema = z
   .superRefine((bundle, context) => {
     uniqueIds(bundle.sources, "sourceId", "source", context);
     uniqueIds(bundle.stationGroups, "id", "station group", context);
-    uniqueIds(bundle.linearRecords, "id", "linear record", context);
     uniqueIds(bundle.streetSubjects, "id", "street subject", context);
     uniqueIds(bundle.targetCorridors, "targetId", "target corridor", context);
     uniqueIds(bundle.streetAssignments, "id", "street assignment", context);
@@ -187,11 +171,6 @@ export const visualizationBundleSchema = z
         validateObservation(observation, sourceIds, context);
       }
     }
-    for (const record of bundle.linearRecords) {
-      requireKnownSource(record.sourceId, sourceIds, "linear record", context);
-      validateObservation(record.observation, sourceIds, context);
-    }
-
     const targetIds = new Set(bundle.targetCorridors.map(({ targetId }) => targetId));
     for (const required of ["avenue-de-la-gare", "avenue-de-verdun"] as const) {
       if (!targetIds.has(required)) {

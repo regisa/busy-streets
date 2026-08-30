@@ -2,7 +2,6 @@ import { describe, expect, test } from "vitest";
 import type { LineString } from "geojson";
 
 import {
-  classifyLineGeographicCoverage,
   classifyPointGeographicScope,
   createBiarritzGeographicFrame,
   geographicFrameBoundingBox,
@@ -98,128 +97,6 @@ describe("Biarritz geography", () => {
         frame,
       ),
     ).toBe(expected);
-  });
-
-  test("measures only the part of a line inside Biarritz", () => {
-    const frame = createBiarritzGeographicFrame(
-      parseBiarritzBoundary(boundaryFeature),
-    );
-
-    expect(
-      classifyLineGeographicCoverage(
-        {
-          type: "LineString",
-          coordinates: [
-            [-0.005, 0.005],
-            [0.015, 0.005],
-          ],
-        },
-        frame,
-      ),
-    ).toEqual({
-      municipalityIntersects: true,
-      bufferIntersects: true,
-      lengthInsideMunicipalityKilometers: expect.closeTo(1.11195, 3),
-    });
-  });
-
-  test("distinguishes a buffer-only line from an outside line", () => {
-    const frame = createBiarritzGeographicFrame(
-      parseBiarritzBoundary(boundaryFeature),
-    );
-
-    expect(
-      classifyLineGeographicCoverage(
-        {
-          type: "LineString",
-          coordinates: [
-            [-0.005, -0.005],
-            [-0.001, -0.005],
-          ],
-        },
-        frame,
-      ),
-    ).toEqual({
-      municipalityIntersects: false,
-      bufferIntersects: true,
-      lengthInsideMunicipalityKilometers: 0,
-    });
-
-    expect(
-      classifyLineGeographicCoverage(
-        {
-          type: "LineString",
-          coordinates: [
-            [-0.05, -0.05],
-            [-0.04, -0.05],
-          ],
-        },
-        frame,
-      ),
-    ).toEqual({
-      municipalityIntersects: false,
-      bufferIntersects: false,
-      lengthInsideMunicipalityKilometers: 0,
-    });
-  });
-
-  test("sums municipality length across a MultiLineString", () => {
-    const frame = createBiarritzGeographicFrame(
-      parseBiarritzBoundary(boundaryFeature),
-    );
-    const coverage = classifyLineGeographicCoverage(
-      {
-        type: "MultiLineString",
-        coordinates: [
-          [
-            [-0.005, 0.003],
-            [0.015, 0.003],
-          ],
-          [
-            [-0.005, 0.007],
-            [0.015, 0.007],
-          ],
-        ],
-      },
-      frame,
-    );
-
-    expect(coverage.municipalityIntersects).toBe(true);
-    expect(coverage.bufferIntersects).toBe(true);
-    expect(coverage.lengthInsideMunicipalityKilometers).toBeCloseTo(2.2239, 3);
-  });
-
-  test("does not count the part of a line crossing a polygon hole", () => {
-    const boundary = parseBiarritzBoundary({
-      ...boundaryFeature,
-      geometry: {
-        type: "MultiPolygon",
-        coordinates: [
-          [
-            boundaryFeature.geometry.coordinates[0]![0]!,
-            [
-              [0.004, 0.004],
-              [0.006, 0.004],
-              [0.006, 0.006],
-              [0.004, 0.006],
-              [0.004, 0.004],
-            ],
-          ],
-        ],
-      },
-    });
-    const coverage = classifyLineGeographicCoverage(
-      {
-        type: "LineString",
-        coordinates: [
-          [-0.005, 0.005],
-          [0.015, 0.005],
-        ],
-      },
-      createBiarritzGeographicFrame(boundary),
-    );
-
-    expect(coverage.lengthInsideMunicipalityKilometers).toBeCloseTo(0.88956, 3);
   });
 
   test("requires both buffer-only scope and a corridor crossing the boundary for ingress", () => {

@@ -71,28 +71,6 @@ export const DREAL_TRAFFIC_SOURCES = [
     license: LICENCE_NOT_SPECIFIED,
   },
   {
-    id: "dreal-2023-linear",
-    title: "Nouvelle-Aquitaine: road traffic 2023, linear network",
-    datasetUrl:
-      "https://www.data.gouv.fr/datasets/nouvelle-aquitaine-trafic-routier-2023-du-reseau-autoroutier-concede-du-reseau-national-et-du-reseau-departemental-lineaire",
-    resourceUrl:
-      "https://www.data.gouv.fr/api/1/datasets/r/712a838d-da9e-4247-bc8d-8e633530b101",
-    coverageYears: [2023, 2023],
-    geometryKind: "line",
-    publicationDate: "2025-04-10",
-    adapterVersion: "1",
-    expectedFormats: ["zip", "shp"],
-    wfs: {
-      endpoint:
-        "https://datacarto.sigena.fr/wfs/31e35ea7-c328-4411-ae8f-306ca536678a",
-      typeName: "ms:l_tmja2023_l_r74",
-      version: "2.0.0",
-      outputFormat: "application/json; subtype=geojson",
-      outputCrs: "EPSG:4326",
-    },
-    license: LICENCE_NOT_SPECIFIED,
-  },
-  {
     id: "dreal-2024-point",
     title: "Nouvelle-Aquitaine: road traffic 2024, counter locations",
     datasetUrl:

@@ -58,7 +58,6 @@ function validBundle(): Record<string, unknown> {
         issues: [],
       },
     ],
-    linearRecords: [],
     streetSubjects: [
       {
         id: "ign-street:avenue-de-verdun:1",

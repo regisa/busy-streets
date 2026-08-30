@@ -40,7 +40,7 @@ describe("WFS acquisition", () => {
   });
 
   test("builds a bounded GeoJSON request for the buffered geographic frame", () => {
-    const source = DREAL_TRAFFIC_SOURCES[4];
+    const source = DREAL_TRAFFIC_SOURCES[3];
     const boundingBox = {
       west: -1.58,
       south: 43.45,
@@ -85,7 +85,7 @@ describe("WFS acquisition", () => {
   });
 
   test("stores a WFS sample with its request URL and output CRS", async () => {
-    const source = DREAL_TRAFFIC_SOURCES[4];
+    const source = DREAL_TRAFFIC_SOURCES[3];
     const cacheDirectory = await temporaryDirectory();
     const sample = JSON.stringify({
       type: "FeatureCollection",
@@ -114,7 +114,7 @@ describe("WFS acquisition", () => {
   });
 
   test("stores a bounding-box sample with distinct provenance", async () => {
-    const source = DREAL_TRAFFIC_SOURCES[3];
+    const source = DREAL_TRAFFIC_SOURCES[4];
     const cacheDirectory = await temporaryDirectory();
     const boundingBox = {
       west: -1.58,
@@ -145,14 +145,14 @@ describe("WFS acquisition", () => {
       buildWfsBoundingBoxSampleUrl(source, 250, boundingBox),
     );
     expect(result.artifact.originalFilename).toBe(
-      "dreal-2023-linear-wfs-bbox-sample.geojson",
+      "dreal-2024-linear-wfs-bbox-sample.geojson",
     );
     expect(result.artifact.crs).toBe("EPSG:4326");
     expect(await readFile(result.localPath, "utf8")).toBe(sample);
   });
 
   test("stores WFS schema evidence as a separate artifact", async () => {
-    const source = DREAL_TRAFFIC_SOURCES[4];
+    const source = DREAL_TRAFFIC_SOURCES[3];
     const cacheDirectory = await temporaryDirectory();
     const schema = "<schema xmlns=\"http://www.w3.org/2001/XMLSchema\"/>";
 

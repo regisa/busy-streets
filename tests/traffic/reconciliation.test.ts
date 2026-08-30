@@ -189,7 +189,7 @@ describe("traffic observation reconciliation", () => {
         subjectId: "continuity:station-1",
         observation: observation({
           id: "source-b:observation:2024",
-          sourceId: "dreal-2023-linear",
+          sourceId: "dreal-2019-2023-point",
           sourceRecordId: "source-b:record:9",
           vehiclesPerDay: 12_000,
         }),
@@ -232,7 +232,7 @@ describe("traffic observation reconciliation", () => {
         subjectId: "continuity:station-a",
         observation: observation({
           id: "source-c:observation:2024",
-          sourceId: "dreal-2023-linear",
+          sourceId: "dreal-2024-linear",
           sourceRecordId: "source-c:record:3",
           vehiclesPerDay: 9_000,
         }),

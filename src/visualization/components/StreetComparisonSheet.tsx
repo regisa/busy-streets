@@ -8,11 +8,15 @@ export function StreetComparisonSheet({
   selectedCount,
   collapsed,
   onCollapsedChange,
+  onRemoveStreet,
+  onClearSelection,
 }: Readonly<{
   matrix: StreetComparisonMatrix;
   selectedCount: number;
   collapsed: boolean;
   onCollapsedChange: (collapsed: boolean) => void;
+  onRemoveStreet: (streetGroupId: string) => void;
+  onClearSelection: () => void;
 }>) {
   if (collapsed) {
     return (
@@ -31,14 +35,23 @@ export function StreetComparisonSheet({
       <div className="sheet-handle" aria-hidden="true" />
       <header>
         <h2 id="street-comparison-title">{fr.streetComparisonTitle}</h2>
-        <button
-          type="button"
-          className="sheet-close"
-          aria-label={fr.collapseComparison}
-          onClick={() => onCollapsedChange(true)}
-        >
-          −
-        </button>
+        <div className="sheet-actions">
+          <button
+            type="button"
+            className="sheet-clear"
+            onClick={onClearSelection}
+          >
+            {fr.clearStreetSelection}
+          </button>
+          <button
+            type="button"
+            className="sheet-close"
+            aria-label={fr.collapseComparison}
+            onClick={() => onCollapsedChange(true)}
+          >
+            −
+          </button>
+        </div>
       </header>
       <div className="street-comparison-scroll">
         <table className="street-comparison-table">
@@ -56,10 +69,17 @@ export function StreetComparisonSheet({
             {matrix.rows.map((row) => (
               <tr key={row.id}>
                 <th scope="row">
-                  <span>{row.streetName}</span>
-                  {row.candidateReview ? (
-                    <span className="evidence-label">{fr.candidateReview}</span>
-                  ) : null}
+                  <span className="street-comparison-name">
+                    <span>{row.streetName}</span>
+                    <button
+                      type="button"
+                      className="street-row-remove"
+                      aria-label={fr.removeStreet(row.streetName)}
+                      onClick={() => onRemoveStreet(row.streetGroupId)}
+                    >
+                      ×
+                    </button>
+                  </span>
                 </th>
                 <td>{row.locationLabel ?? "—"}</td>
                 <td>
